@@ -1,0 +1,30 @@
+/* styles/index.css */
+
+/* Tailwind Base */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom global styles */
+html, body {
+  @apply bg-muted/30 text-gray-900 antialiased;
+}
+
+/* Smooth transitions everywhere */
+* {
+  @apply transition-all duration-150;
+}
+
+/* Scrollbars clean */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-md;
+}
+
+/* Default container padding */
+.page-wrapper {
+  @apply p-4 md:p-6 lg:p-8;
+}

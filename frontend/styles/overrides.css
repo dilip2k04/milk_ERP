@@ -1,0 +1,49 @@
+/* styles/overrides.css */
+
+/* ---------------------------------------------
+   Fix shadcn cards paddings and spacing
+------------------------------------------------ */
+.card {
+  @apply rounded-xl shadow-sm;
+}
+
+/* ---------------------------------------------
+   Button refinement (shadcn base override)
+------------------------------------------------ */
+button {
+  @apply rounded-lg font-medium;
+}
+
+/* ---------------------------------------------
+   DataTable tweaks
+------------------------------------------------ */
+.data-table-row:hover {
+  @apply bg-muted/40;
+}
+
+/* Highlight active menu item */
+.sidebar-item-active {
+  @apply bg-primary/10 text-primary font-semibold;
+}
+
+/* ---------------------------------------------
+   Layout spacing
+------------------------------------------------ */
+.layout-container {
+  @apply px-4 py-4 md:px-6 md:py-6;
+}
+
+/* ---------------------------------------------
+   Dark mode (optional)
+------------------------------------------------ */
+.dark body {
+  @apply bg-neutral-900 text-neutral-100;
+}
+
+.dark .card {
+  @apply bg-neutral-800 border border-neutral-700;
+}
+
+.dark button {
+  @apply bg-neutral-800 text-white;
+}
