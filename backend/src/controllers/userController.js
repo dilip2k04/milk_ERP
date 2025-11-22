@@ -1,51 +1,121 @@
-const Model = require("../models/User");
+const asyncHandler = require("../middleware/asyncHandler");
+const admin = require("../config/firebase");
+const User = require("../models/User");
 
-// BASIC CRUD - customize as needed
+// Ensure only admin can do user mgmt
+function ensureAdmin(req, res) {
+  if (req.role !== "admin") {
+    res.status(403).json({ message: "Admin access required" });
+    return false;
+  }
+  return true;
+}
 
-exports.createUser = async (req, res, next) => {
+// -------------------------------------------------------------
+// CREATE USER
+// -------------------------------------------------------------
+exports.createUser = async (req, res) => {
   try {
-    const doc = await Model.create(req.body);
-    res.status(201).json(doc);
+    if (!ensureAdmin(req, res)) return;
+
+    const { name, email, phone, role } = req.body;
+
+    if (!name || !email || !phone || !role) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Create Firebase User
+    const fbUser = await admin.auth().createUser({
+      email,
+      password: "123456",
+      displayName: name,
+    });
+
+    // Save MongoDB User
+    const newUser = await User.create({
+      firebaseUid: fbUser.uid,
+      name,
+      email,
+      phone,
+      role,
+      isActive: true,
+      createdBy: req.user._id,
+    });
+
+    res.status(201).json({ success: true, data: newUser });
+
   } catch (err) {
-    next(err);
+    console.error("🔥 Create User Error:", err);
+    res.status(500).json({
+      message: "Failed to create user",
+      error: err.message,
+    });
   }
 };
 
-exports.getUsers = async (req, res, next) => {
-  try {
-    const docs = await Model.find();
-    res.json(docs);
-  } catch (err) {
-    next(err);
-  }
-};
+// -------------------------------------------------------------
+// GET ALL USERS
+// -------------------------------------------------------------
+exports.getUsers = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
 
-exports.getUserById = async (req, res, next) => {
-  try {
-    const doc = await Model.findById(req.params.id);
-    if (!doc) return res.status(404).json({ message: "User not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
-};
+  const users = await User.find().sort({ createdAt: -1 });
+  res.json({ success: true, data: users });
+});
 
-exports.updateUser = async (req, res, next) => {
-  try {
-    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!doc) return res.status(404).json({ message: "User not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
-};
+// -------------------------------------------------------------
+// GET USER BY ID
+// -------------------------------------------------------------
+exports.getUserById = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
 
-exports.deleteUser = async (req, res, next) => {
-  try {
-    const doc = await Model.findByIdAndDelete(req.params.id);
-    if (!doc) return res.status(404).json({ message: "User not found" });
-    res.json({ message: "User deleted" });
-  } catch (err) {
-    next(err);
-  }
-};
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  res.json({ success: true, data: user });
+});
+
+// -------------------------------------------------------------
+// UPDATE USER
+// -------------------------------------------------------------
+exports.updateUser = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
+
+  const { isActive, name, phone, role } = req.body;
+
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  // Update Firebase status (enable/disable)
+  await admin.auth().updateUser(user.firebaseUid, {
+    disabled: !isActive,
+  });
+
+  // Update MongoDB
+  user.name = name;
+  user.phone = phone;
+  user.role = role;
+  user.isActive = isActive;
+
+  await user.save();
+
+  res.json({ success: true, data: user });
+});
+
+// -------------------------------------------------------------
+// DELETE USER
+// -------------------------------------------------------------
+exports.deleteUser = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
+
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  // Delete Firebase account
+  await admin.auth().deleteUser(user.firebaseUid);
+
+  // Delete from MongoDB
+  await user.deleteOne();
+
+  res.json({ success: true, message: "User deleted successfully" });
+});

@@ -15,22 +15,22 @@ async function authFirebase(req, res, next) {
     // Verify Firebase token
     const decoded = await admin.auth().verifyIdToken(token);
 
-    // Find user from DB using UID
+    // Find user in MongoDB
     const dbUser = await User.findOne({ firebaseUid: decoded.uid });
 
     if (!dbUser) {
-      return res.status(401).json({ message: "User not found in system" });
+      return res.status(401).json({ message: "User not found in database" });
     }
 
-    // Attach full user object
-    req.user = dbUser;              // <-- FIX
-    req.firebaseUid = decoded.uid;
-    req.email = decoded.email;
+    // Attach user object
+    req.user = dbUser;        // full Mongo user
+    req.role = dbUser.role;   // required by RBAC middleware
+    req.firebaseUid = dbUser.firebaseUid;
+    req.email = dbUser.email;
 
     next();
-
   } catch (err) {
-    console.error("Firebase Auth Error:", err);
+    console.error("🔥 Firebase Auth Error:", err);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 }

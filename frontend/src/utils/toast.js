@@ -1,5 +1,5 @@
 // utils/toast.js
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "../hooks/use-toast";
 
 export const successToast = (message) => {
   toast({
