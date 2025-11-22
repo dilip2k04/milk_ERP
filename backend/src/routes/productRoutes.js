@@ -1,5 +1,7 @@
+// src/routes/productRoutes.js
 const express = require("express");
 const router = express.Router();
+
 const authFirebase = require("../middleware/authFirebase");
 const { requireRoles } = require("../middleware/rbac");
 
@@ -8,17 +10,20 @@ const {
   getProducts,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
 } = require("../controllers/productController");
 
-const allowedRoles = ["admin"];
+/**
+ * 🟢 Allow ALL authenticated users to READ products
+ */
+router.get("/", authFirebase, getProducts);
+router.get("/:id", authFirebase, getProductById);
 
-router.use(authFirebase, requireRoles(allowedRoles));
-
-router.post("/", createProduct);
-router.get("/", getProducts);
-router.get("/:id", getProductById);
-router.patch("/:id", updateProduct);
-router.delete("/:id", deleteProduct);
+/**
+ * 🔒 Only Admins can modify products
+ */
+router.post("/", authFirebase, requireRoles(["admin"]), createProduct);
+router.put("/:id", authFirebase, requireRoles(["admin"]), updateProduct);
+router.delete("/:id", authFirebase, requireRoles(["admin"]), deleteProduct);
 
 module.exports = router;

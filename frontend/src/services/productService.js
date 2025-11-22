@@ -1,16 +1,14 @@
-// services/productService.js
+// src/services/productService.js
 import api from "../utils/apiClient";
 
 const productService = {
-  getTypes: () => api.get("/product-types"),
-  createType: (data) => api.post("/product-types", data),
-  updateType: (id, data) => api.put(`/product-types/${id}`, data),
-  deleteType: (id) => api.delete(`/product-types/${id}`),
+  // All roles can GET
+  getAll: () => api.get("/products"),
 
-  getProducts: () => api.get("/products"),
-  createProduct: (data) => api.post("/products", data),
-  updateProduct: (id, data) => api.put(`/products/${id}`, data),
-  deleteProduct: (id) => api.delete(`/products/${id}`),
+  // Admin-only (backend restricts automatically)
+  create: (payload) => api.post("/products", payload),
+  update: (id, payload) => api.put(`/products/${id}`, payload),
+  remove: (id) => api.delete(`/products/${id}`),
 };
 
 export default productService;

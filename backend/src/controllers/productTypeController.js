@@ -1,51 +1,89 @@
-const Model = require("../models/ProductType");
+// src/controllers/productTypeController.js
+const asyncHandler = require("../middleware/asyncHandler");
+const ProductType = require("../models/ProductType");
+const Product = require("../models/Product");
 
-// BASIC CRUD - customize as needed
-
-exports.createProductType = async (req, res, next) => {
-  try {
-    const doc = await Model.create(req.body);
-    res.status(201).json(doc);
-  } catch (err) {
-    next(err);
+// Small helper to be safe
+function ensureAdmin(req, res) {
+  if (req.role !== "admin") {
+    res.status(403).json({ message: "Admin access required" });
+    return false;
   }
-};
+  return true;
+}
 
-exports.getProductTypes = async (req, res, next) => {
-  try {
-    const docs = await Model.find();
-    res.json(docs);
-  } catch (err) {
-    next(err);
-  }
-};
+// CREATE Product Type
+exports.createProductType = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
 
-exports.getProductTypeById = async (req, res, next) => {
-  try {
-    const doc = await Model.findById(req.params.id);
-    if (!doc) return res.status(404).json({ message: "ProductType not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
-};
+  const { name, description, isActive = true } = req.body;
 
-exports.updateProductType = async (req, res, next) => {
-  try {
-    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!doc) return res.status(404).json({ message: "ProductType not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
+  if (!name) {
+    return res.status(400).json({ message: "Name is required" });
   }
-};
 
-exports.deleteProductType = async (req, res, next) => {
-  try {
-    const doc = await Model.findByIdAndDelete(req.params.id);
-    if (!doc) return res.status(404).json({ message: "ProductType not found" });
-    res.json({ message: "ProductType deleted" });
-  } catch (err) {
-    next(err);
+  const doc = await ProductType.create({
+    name,
+    description: description || "",
+    isActive,
+    createdBy: req.user._id
+  });
+
+  res.status(201).json({ success: true, data: doc });
+});
+
+// GET ALL Product Types
+exports.getProductTypes = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
+
+  const docs = await ProductType.find().sort({ createdAt: -1 });
+  res.json({ success: true, data: docs });
+});
+
+// GET SINGLE Product Type
+exports.getProductTypeById = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
+
+  const doc = await ProductType.findById(req.params.id);
+  if (!doc) return res.status(404).json({ message: "Product type not found" });
+
+  res.json({ success: true, data: doc });
+});
+
+// UPDATE Product Type
+exports.updateProductType = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
+
+  const { name, description, isActive } = req.body;
+
+  const doc = await ProductType.findById(req.params.id);
+  if (!doc) return res.status(404).json({ message: "Product type not found" });
+
+  if (typeof name !== "undefined") doc.name = name;
+  if (typeof description !== "undefined") doc.description = description;
+  if (typeof isActive !== "undefined") doc.isActive = isActive;
+
+  await doc.save();
+
+  res.json({ success: true, data: doc });
+});
+
+// DELETE Product Type
+exports.deleteProductType = asyncHandler(async (req, res) => {
+  if (!ensureAdmin(req, res)) return;
+
+  const doc = await ProductType.findById(req.params.id);
+  if (!doc) return res.status(404).json({ message: "Product type not found" });
+
+  // Optional: avoid deleting if products exist
+  const productCount = await Product.countDocuments({ productTypeId: doc._id });
+  if (productCount > 0) {
+    return res.status(400).json({
+      message: "Cannot delete: products are linked to this product type"
+    });
   }
-};
+
+  await doc.deleteOne();
+
+  res.json({ success: true, message: "Product type deleted" });
+});

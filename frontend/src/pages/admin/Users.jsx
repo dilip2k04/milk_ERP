@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -35,23 +35,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, MoreVertical, Edit, Trash2, Filter, Users as UsersIcon } from "lucide-react";
+import { Search, Plus, MoreVertical, Edit, Trash2 } from "lucide-react";
 
 import PageContainer from "../../components/common/PageContainer";
 import userService from "../../services/userService";
 import { successToast, errorToast } from "../../utils/toast";
 
 const ROLE_OPTIONS = [
-  { value: "admin", label: "Admin", color: "bg-red-100 text-red-800" },
-  { value: "company", label: "Company", color: "bg-blue-100 text-blue-800" },
-  { value: "shop_keeper", label: "Shop Keeper", color: "bg-green-100 text-green-800" },
-  { value: "farmer", label: "Farmer", color: "bg-orange-100 text-orange-800" },
+  { value: "admin", label: "Admin" },
+  { value: "company", label: "Company" },
+  { value: "shop_keeper", label: "Shop Keeper" },
+  { value: "farmer", label: "Farmer" },
 ];
-
-const getRoleBadge = (role) => {
-  const roleConfig = ROLE_OPTIONS.find(r => r.value === role);
-  return roleConfig || { label: role, color: "bg-gray-100 text-gray-800" };
-};
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -110,7 +105,7 @@ export default function Users() {
     try {
       setActionLoading(true);
       await userService.create(form);
-      successToast("User created successfully (default password: 123456)");
+      successToast("User created successfully");
       setIsCreateOpen(false);
       loadUsers();
     } catch (err) {
@@ -150,7 +145,7 @@ export default function Users() {
   };
 
   const handleDelete = async (user) => {
-    if (!window.confirm(`Are you sure you want to delete ${user.name}? This action cannot be undone.`)) return;
+    if (!window.confirm(`Delete user ${user.name}?`)) return;
     
     try {
       setActionLoading(true);
@@ -175,9 +170,7 @@ export default function Users() {
         role: user.role,
       });
 
-      successToast(
-        `User ${!user.isActive ? "activated" : "deactivated"} successfully`
-      );
+      successToast(`User ${!user.isActive ? "activated" : "deactivated"}`);
       loadUsers();
     } catch (err) {
       errorToast("Failed to update user status");
@@ -199,81 +192,28 @@ export default function Users() {
     return matchesSearch && matchesRole;
   });
 
-  const stats = {
-    total: users.length,
-    active: users.filter(u => u.isActive).length,
-    admins: users.filter(u => u.role === 'admin').length,
-  };
-
   return (
-    <PageContainer title="User Management" description="Manage system users and their permissions">
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <UsersIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <div className="h-2 w-2 bg-green-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.active}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% of total
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Administrators</CardTitle>
-            <div className="h-2 w-2 bg-red-500 rounded-full" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.admins}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Actions</CardTitle>
-            <Plus className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Button onClick={openCreate} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
-              Add User
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters and Search */}
+    <PageContainer title="Users">
+      {/* Search and Actions */}
       <Card className="mb-6">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search users..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 bg-white border-gray-300"
                 />
               </div>
               
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-40">
-                  <Filter className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-full sm:w-40 bg-white border-gray-300">
                   <SelectValue placeholder="All Roles" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-300">
                   <SelectItem value="all">All Roles</SelectItem>
                   {ROLE_OPTIONS.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
@@ -284,7 +224,7 @@ export default function Users() {
               </Select>
             </div>
 
-            <Button onClick={openCreate} className="w-full sm:w-auto">
+            <Button onClick={openCreate} className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white">
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -294,78 +234,53 @@ export default function Users() {
 
       {/* Users Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-        </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+              <TableRow className="bg-gray-50">
+                <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Email</TableHead>
+                <TableHead className="font-semibold">Phone</TableHead>
+                <TableHead className="font-semibold">Role</TableHead>
+                <TableHead className="font-semibold">Status</TableHead>
+                <TableHead className="font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
                     </div>
-                    <p className="text-muted-foreground mt-2">Loading users...</p>
+                    <p className="text-gray-500 mt-2">Loading users...</p>
                   </TableCell>
                 </TableRow>
               ) : filteredUsers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <UsersIcon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No users found</p>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <p className="text-gray-500">No users found</p>
                     {search || roleFilter !== "all" ? (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Try adjusting your search or filter criteria
+                      <p className="text-sm text-gray-500 mt-1">
+                        Try adjusting your search
                       </p>
                     ) : (
-                      <Button onClick={openCreate} className="mt-4">
+                      <Button onClick={openCreate} className="mt-4 bg-black hover:bg-gray-800 text-white">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Your First User
+                        Add User
                       </Button>
                     )}
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredUsers.map((user) => (
-                  <TableRow key={user._id} className="group">
+                  <TableRow key={user._id} className="border-b border-gray-200">
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone || "-"}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex-shrink-0">
-                          <div className="h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                            {user.name?.charAt(0).toUpperCase()}
-                          </div>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-foreground">
-                            {user.name}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            ID: {user._id?.substring(0, 8)}...
-                          </span>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="text-foreground">{user.email}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {user.phone || "No phone"}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={getRoleBadge(user.role).color}>
-                        {getRoleBadge(user.role).label}
+                      <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
+                        {user.role}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -374,9 +289,9 @@ export default function Users() {
                           checked={user.isActive}
                           onCheckedChange={() => toggleActiveState(user)}
                           disabled={actionLoading}
-                          className="data-[state=checked]:bg-green-600"
+                          className="data-[state=checked]:bg-black"
                         />
-                        <span className={`text-sm font-medium ${user.isActive ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className={`text-sm ${user.isActive ? 'text-black' : 'text-gray-500'}`}>
                           {user.isActive ? 'Active' : 'Inactive'}
                         </span>
                       </div>
@@ -384,21 +299,21 @@ export default function Users() {
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openEdit(user)}>
+                        <DropdownMenuContent align="end" className="bg-white border-gray-200">
+                          <DropdownMenuItem onClick={() => openEdit(user)} className="text-gray-700">
                             <Edit className="h-4 w-4 mr-2" />
-                            Edit User
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => handleDelete(user)}
-                            className="text-red-600 focus:text-red-600"
+                            className="text-gray-700"
                           >
                             <Trash2 className="h-4 w-4 mr-2" />
-                            Delete User
+                            Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -413,56 +328,56 @@ export default function Users() {
 
       {/* Create User Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="bg-white text-black border border-gray-200 sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Create New User</DialogTitle>
-            <DialogDescription>
-              Add a new user to the system. A default password of "123456" will be set.
-            </DialogDescription>
+            <DialogTitle className="text-lg font-semibold">Create User</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
+              <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
               <Input
                 id="name"
                 placeholder="Enter full name"
                 value={form.name}
                 onChange={(e) => handleFormChange("name", e.target.value)}
+                className="bg-white border-gray-300"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address *</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="Enter email address"
+                placeholder="Enter email"
                 value={form.email}
                 onChange={(e) => handleFormChange("email", e.target.value)}
+                className="bg-white border-gray-300"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="phone" className="text-sm font-medium">Phone</Label>
               <Input
                 id="phone"
                 placeholder="Enter phone number"
                 value={form.phone}
                 onChange={(e) => handleFormChange("phone", e.target.value)}
+                className="bg-white border-gray-300"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="role">User Role *</Label>
+              <Label htmlFor="role" className="text-sm font-medium">Role</Label>
               <Select
                 value={form.role}
                 onValueChange={(val) => handleFormChange("role", val)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
+                <SelectTrigger className="bg-white border-gray-300">
+                  <SelectValue placeholder="Select role" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-300">
                   {ROLE_OPTIONS.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
                       {r.label}
@@ -472,19 +387,13 @@ export default function Users() {
               </Select>
             </div>
 
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
+            <div className="flex items-center gap-3">
               <Switch
-                id="active"
                 checked={form.isActive}
                 onCheckedChange={(val) => handleFormChange("isActive", val)}
-                className="data-[state=checked]:bg-green-600"
+                className="data-[state=checked]:bg-black"
               />
-              <div className="flex flex-col">
-                <Label htmlFor="active" className="cursor-pointer">Active User</Label>
-                <span className="text-sm text-muted-foreground">
-                  User will be able to access the system
-                </span>
-              </div>
+              <Label className="text-sm">Active</Label>
             </div>
           </div>
 
@@ -493,14 +402,16 @@ export default function Users() {
               variant="outline" 
               onClick={() => setIsCreateOpen(false)}
               disabled={actionLoading}
+              className="border-gray-300 text-black hover:bg-gray-100"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleCreate}
               disabled={!form.name || !form.email || actionLoading}
+              className="bg-black hover:bg-gray-800 text-white"
             >
-              {actionLoading ? "Creating..." : "Create User"}
+              {actionLoading ? "Creating..." : "Create"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -508,58 +419,54 @@ export default function Users() {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="bg-white text-black border border-gray-200 sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user information and permissions.
-            </DialogDescription>
+            <DialogTitle className="text-lg font-semibold">Edit User</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Full Name *</Label>
+              <Label htmlFor="edit-name" className="text-sm font-medium">Full Name</Label>
               <Input
                 id="edit-name"
                 placeholder="Enter full name"
                 value={form.name}
                 onChange={(e) => handleFormChange("name", e.target.value)}
+                className="bg-white border-gray-300"
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="edit-email">Email Address</Label>
+              <Label htmlFor="edit-email" className="text-sm font-medium">Email</Label>
               <Input
                 id="edit-email"
                 disabled
                 value={form.email}
-                className="bg-muted"
+                className="bg-gray-100 border-gray-300 text-gray-600"
               />
-              <p className="text-sm text-muted-foreground">
-                Email address cannot be changed
-              </p>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="edit-phone">Phone Number</Label>
+              <Label htmlFor="edit-phone" className="text-sm font-medium">Phone</Label>
               <Input
                 id="edit-phone"
                 placeholder="Enter phone number"
                 value={form.phone}
                 onChange={(e) => handleFormChange("phone", e.target.value)}
+                className="bg-white border-gray-300"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-role">User Role *</Label>
+              <Label htmlFor="edit-role" className="text-sm font-medium">Role</Label>
               <Select
                 value={form.role}
                 onValueChange={(val) => handleFormChange("role", val)}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a role" />
+                <SelectTrigger className="bg-white border-gray-300">
+                  <SelectValue placeholder="Select role" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white border-gray-300">
                   {ROLE_OPTIONS.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
                       {r.label}
@@ -569,19 +476,13 @@ export default function Users() {
               </Select>
             </div>
 
-            <div className="flex items-center gap-3 p-3 border rounded-lg">
+            <div className="flex items-center gap-3">
               <Switch
-                id="edit-active"
                 checked={form.isActive}
                 onCheckedChange={(val) => handleFormChange("isActive", val)}
-                className="data-[state=checked]:bg-green-600"
+                className="data-[state=checked]:bg-black"
               />
-              <div className="flex flex-col">
-                <Label htmlFor="edit-active" className="cursor-pointer">Active User</Label>
-                <span className="text-sm text-muted-foreground">
-                  User will be able to access the system
-                </span>
-              </div>
+              <Label className="text-sm">Active</Label>
             </div>
           </div>
 
@@ -593,14 +494,16 @@ export default function Users() {
                 setEditingUser(null);
               }}
               disabled={actionLoading}
+              className="border-gray-300 text-black hover:bg-gray-100"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleUpdate}
               disabled={!form.name || actionLoading}
+              className="bg-black hover:bg-gray-800 text-white"
             >
-              {actionLoading ? "Saving..." : "Save Changes"}
+              {actionLoading ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

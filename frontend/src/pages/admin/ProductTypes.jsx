@@ -1,7 +1,14 @@
-// src/pages/admin/PaymentMethods.jsx
+// src/pages/admin/ProductTypes.jsx
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,151 +20,131 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Search, Plus, Edit, Trash2 } from "lucide-react";
 
 import PageContainer from "../../components/common/PageContainer";
+import productTypeService from "../../services/productTypeService";
 import { successToast, errorToast } from "../../utils/toast";
-import paymentMethodService from "../../services/paymentMethodService";
 
-export default function PaymentMethodsPage() {
-  const [methods, setMethods] = useState([]);
+export default function ProductTypes() {
+  const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [updatingId, setUpdatingId] = useState(null);
   const [search, setSearch] = useState("");
+  const [updatingId, setUpdatingId] = useState(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
+    description: "",
     isActive: true,
   });
 
-  const [editing, setEditing] = useState(null);
+  const [editingType, setEditingType] = useState(null);
 
-  // LOAD ALL METHODS
-  const loadMethods = async () => {
+  const loadTypes = async () => {
     try {
       setLoading(true);
-      const res = await paymentMethodService.getAll();
-      const list = res.data?.data || res.data || [];
-      setMethods(list);
+      const res = await productTypeService.getAll();
+      setTypes(res.data.data || []);
     } catch (err) {
       console.error(err);
-      errorToast("Failed to load payment methods");
+      errorToast("Failed to load product types");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadMethods();
+    loadTypes();
   }, []);
-
-  const openCreate = () => {
-    setForm({ name: "", isActive: true });
-    setIsCreateOpen(true);
-  };
-
-  const openEdit = (method) => {
-    setEditing(method);
-    setForm({
-      name: method.name || "",
-      isActive: method.isActive ?? true,
-    });
-    setIsEditOpen(true);
-  };
 
   const handleFormChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  // CREATE
+  const openCreate = () => {
+    setForm({ name: "", description: "", isActive: true });
+    setIsCreateOpen(true);
+  };
+
+  const openEdit = (pt) => {
+    setEditingType(pt);
+    setForm({
+      name: pt.name || "",
+      description: pt.description || "",
+      isActive: pt.isActive ?? true,
+    });
+    setIsEditOpen(true);
+  };
+
   const handleCreate = async () => {
     try {
-      if (!form.name.trim()) {
-        errorToast("Name is required");
-        return;
-      }
-
-      await paymentMethodService.create(form);
-      successToast("Payment method created");
-
+      await productTypeService.create(form);
+      successToast("Product type created");
       setIsCreateOpen(false);
-      loadMethods();
+      loadTypes();
     } catch (err) {
       console.error(err);
-      errorToast(err?.response?.data?.message || "Failed to create");
+      errorToast(err?.response?.data?.message || "Failed to create product type");
     }
   };
 
-  // UPDATE
   const handleUpdate = async () => {
     try {
-      if (!editing) return;
-      if (!form.name.trim()) {
-        errorToast("Name is required");
-        return;
-      }
-
-      await paymentMethodService.update(editing._id, form);
-      successToast("Payment method updated");
-
+      await productTypeService.update(editingType._id, form);
+      successToast("Product type updated");
       setIsEditOpen(false);
-      setEditing(null);
-      loadMethods();
+      setEditingType(null);
+      loadTypes();
     } catch (err) {
       console.error(err);
-      errorToast(err?.response?.data?.message || "Failed to update");
+      errorToast(err?.response?.data?.message || "Failed to update product type");
     }
   };
 
-  // DELETE
-  const handleDelete = async (method) => {
-    if (!window.confirm(`Delete method "${method.name}"?`)) return;
-
+  const handleDelete = async (pt) => {
+    if (!window.confirm(`Delete product type "${pt.name}"?`)) return;
     try {
-      await paymentMethodService.remove(method._id);
-      successToast("Payment method deleted");
-      loadMethods();
+      await productTypeService.remove(pt._id);
+      successToast("Product type deleted");
+      loadTypes();
     } catch (err) {
       console.error(err);
-      errorToast("Failed to delete");
+      errorToast(err?.response?.data?.message || "Failed to delete product type");
     }
   };
 
-  const toggleActiveState = async (method) => {
+  const toggleActiveState = async (pt) => {
     try {
-      setUpdatingId(method._id);
-      const updatedMethod = {
-        name: method.name,
-        isActive: !method.isActive
+      setUpdatingId(pt._id);
+      const updatedType = {
+        name: pt.name,
+        description: pt.description,
+        isActive: !pt.isActive
       };
       
-      await paymentMethodService.update(method._id, updatedMethod);
-      successToast(`Payment method ${!method.isActive ? "activated" : "deactivated"}`);
-      loadMethods();
+      await productTypeService.update(pt._id, updatedType);
+      successToast(`Product type ${!pt.isActive ? "activated" : "deactivated"}`);
+      loadTypes();
     } catch (err) {
       console.error(err);
-      errorToast("Failed to update payment method status");
+      errorToast("Failed to update product type status");
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const filteredMethods = methods.filter((m) =>
-    m.name.toLowerCase().includes(search.toLowerCase())
+  const filteredTypes = types.filter((t) =>
+    !search
+      ? true
+      : t.name?.toLowerCase().includes(search.toLowerCase()) ||
+        t.description?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <PageContainer title="Payment Methods">
+    <PageContainer title="Product Types">
       {/* Search and Actions */}
       <Card className="mb-6">
         <CardContent className="p-4">
@@ -165,7 +152,7 @@ export default function PaymentMethodsPage() {
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search payment methods..."
+                placeholder="Search product types..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9 bg-white border-gray-300"
@@ -174,19 +161,20 @@ export default function PaymentMethodsPage() {
 
             <Button onClick={openCreate} className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white">
               <Plus className="h-4 w-4 mr-2" />
-              Add Method
+              Add Type
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Payment Methods Table */}
+      {/* Product Types Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50">
                 <TableHead className="font-semibold">Name</TableHead>
+                <TableHead className="font-semibold">Description</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold text-right">Actions</TableHead>
               </TableRow>
@@ -194,17 +182,17 @@ export default function PaymentMethodsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-8">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
                     </div>
-                    <p className="text-gray-500 mt-2">Loading payment methods...</p>
+                    <p className="text-gray-500 mt-2">Loading product types...</p>
                   </TableCell>
                 </TableRow>
-              ) : filteredMethods.length === 0 ? (
+              ) : filteredTypes.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center py-8">
-                    <p className="text-gray-500">No payment methods found</p>
+                  <TableCell colSpan={4} className="text-center py-8">
+                    <p className="text-gray-500">No product types found</p>
                     {search ? (
                       <p className="text-sm text-gray-500 mt-1">
                         Try adjusting your search
@@ -212,27 +200,28 @@ export default function PaymentMethodsPage() {
                     ) : (
                       <Button onClick={openCreate} className="mt-4 bg-black hover:bg-gray-800 text-white">
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Payment Method
+                        Add Type
                       </Button>
                     )}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredMethods.map((m) => (
-                  <TableRow key={m._id} className="border-b border-gray-200">
-                    <TableCell className="font-medium">{m.name}</TableCell>
+                filteredTypes.map((pt) => (
+                  <TableRow key={pt._id} className="border-b border-gray-200">
+                    <TableCell className="font-medium">{pt.name}</TableCell>
+                    <TableCell>{pt.description || "-"}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={m.isActive}
-                          onCheckedChange={() => toggleActiveState(m)}
-                          disabled={updatingId === m._id}
+                          checked={pt.isActive}
+                          onCheckedChange={() => toggleActiveState(pt)}
+                          disabled={updatingId === pt._id}
                           className="data-[state=checked]:bg-black"
                         />
-                        <span className={`text-sm ${m.isActive ? 'text-black' : 'text-gray-500'}`}>
-                          {m.isActive ? 'Active' : 'Inactive'}
+                        <span className={`text-sm ${pt.isActive ? 'text-black' : 'text-gray-500'}`}>
+                          {pt.isActive ? 'Active' : 'Inactive'}
                         </span>
-                        {updatingId === m._id && (
+                        {updatingId === pt._id && (
                           <div className="w-3 h-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
                         )}
                       </div>
@@ -242,7 +231,7 @@ export default function PaymentMethodsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => openEdit(m)}
+                          onClick={() => openEdit(pt)}
                           className="border-gray-300 hover:bg-gray-100"
                         >
                           <Edit className="h-4 w-4" />
@@ -250,7 +239,7 @@ export default function PaymentMethodsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleDelete(m)}
+                          onClick={() => handleDelete(pt)}
                           className="border-gray-300 hover:bg-gray-100"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -265,21 +254,32 @@ export default function PaymentMethodsPage() {
         </CardContent>
       </Card>
 
-      {/* CREATE DIALOG */}
+      {/* Create Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className="bg-white text-black border border-gray-200 sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Create Payment Method</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Create Product Type</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">Name</Label>
+              <Label htmlFor="name" className="text-sm font-medium">Type Name</Label>
               <Input
                 id="name"
-                placeholder="GPay / PhonePe / Cash / Bank Transfer..."
+                placeholder="Type name"
                 value={form.name}
                 onChange={(e) => handleFormChange("name", e.target.value)}
+                className="bg-white border-gray-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">Description</Label>
+              <Input
+                id="description"
+                placeholder="Description"
+                value={form.description}
+                onChange={(e) => handleFormChange("description", e.target.value)}
                 className="bg-white border-gray-300"
               />
             </div>
@@ -295,30 +295,50 @@ export default function PaymentMethodsPage() {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateOpen(false)} className="border-gray-300 text-black hover:bg-gray-100">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCreateOpen(false)}
+              className="border-gray-300 text-black hover:bg-gray-100"
+            >
               Cancel
             </Button>
-            <Button onClick={handleCreate} disabled={!form.name.trim()} className="bg-black hover:bg-gray-800 text-white">
+            <Button 
+              onClick={handleCreate}
+              disabled={!form.name}
+              className="bg-black hover:bg-gray-800 text-white"
+            >
               Create
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* EDIT DIALOG */}
+      {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="bg-white text-black border border-gray-200 sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Edit Payment Method</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Edit Product Type</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label htmlFor="edit-name" className="text-sm font-medium">Name</Label>
+              <Label htmlFor="edit-name" className="text-sm font-medium">Type Name</Label>
               <Input
                 id="edit-name"
+                placeholder="Type name"
                 value={form.name}
                 onChange={(e) => handleFormChange("name", e.target.value)}
+                className="bg-white border-gray-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-description" className="text-sm font-medium">Description</Label>
+              <Input
+                id="edit-description"
+                placeholder="Description"
+                value={form.description}
+                onChange={(e) => handleFormChange("description", e.target.value)}
                 className="bg-white border-gray-300"
               />
             </div>
@@ -338,13 +358,17 @@ export default function PaymentMethodsPage() {
               variant="outline"
               onClick={() => {
                 setIsEditOpen(false);
-                setEditing(null);
+                setEditingType(null);
               }}
               className="border-gray-300 text-black hover:bg-gray-100"
             >
               Cancel
             </Button>
-            <Button onClick={handleUpdate} disabled={!form.name.trim()} className="bg-black hover:bg-gray-800 text-white">
+            <Button 
+              onClick={handleUpdate}
+              disabled={!form.name}
+              className="bg-black hover:bg-gray-800 text-white"
+            >
               Save
             </Button>
           </DialogFooter>

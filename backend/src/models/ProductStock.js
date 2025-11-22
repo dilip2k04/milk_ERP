@@ -1,3 +1,4 @@
+// src/models/ProductStock.js
 const mongoose = require("mongoose");
 
 const productStockSchema = new mongoose.Schema(

@@ -2,23 +2,22 @@ const express = require("express");
 const router = express.Router();
 const authFirebase = require("../middleware/authFirebase");
 const { requireRoles } = require("../middleware/rbac");
+const ctrl = require("../controllers/orderController");
 
-const {
-  createOrder,
-  getOrders,
-  getOrderById,
-  updateOrder,
-  deleteOrder
-} = require("../controllers/orderController");
+router.use(authFirebase);
 
-const allowedRoles = ["shop_keeper","admin"];
+// Shop Keeper Create Order
+router.post("/", requireRoles(["shop_keeper"]), ctrl.createOrder);
 
-router.use(authFirebase, requireRoles(allowedRoles));
+// Shop Keeper Cancel/ Delete Before Approval
+router.patch("/:id/cancel", requireRoles(["shop_keeper"]), ctrl.shopKeeperCancel);
+router.delete("/:id", requireRoles(["shop_keeper"]), ctrl.shopKeeperDelete);
 
-router.post("/", createOrder);
-router.get("/", getOrders);
-router.get("/:id", getOrderById);
-router.patch("/:id", updateOrder);
-router.delete("/:id", deleteOrder);
+// Admin Management
+router.get("/", requireRoles(["admin"]), ctrl.getOrders);
+router.patch("/:id/approve", requireRoles(["admin"]), ctrl.approveOrder);
+router.patch("/:id/reject", requireRoles(["admin"]), ctrl.rejectOrder);
+router.patch("/:id/deliver", requireRoles(["admin"]), ctrl.markDelivered);
+router.delete("/:id/admin", requireRoles(["admin"]), ctrl.deleteOrder);
 
 module.exports = router;

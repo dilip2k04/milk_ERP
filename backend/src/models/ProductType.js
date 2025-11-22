@@ -1,3 +1,4 @@
+// src/models/ProductType.js
 const mongoose = require("mongoose");
 
 const productTypeSchema = new mongoose.Schema(

@@ -1,13 +1,19 @@
-// services/orderService.js
+// src/services/orderService.js
 import api from "../utils/apiClient";
 
 const orderService = {
+  // ---------- ShopKeeper ----------
   create: (data) => api.post("/orders", data),
-  getAll: (params = {}) => api.get("/orders", { params }),
-  getById: (id) => api.get(`/orders/${id}`),
+  getMy: () => api.get("/orders/my"),
+  cancelMy: (id) => api.patch(`/orders/${id}/cancel`),
+  deleteMy: (id) => api.delete(`/orders/${id}`),
 
-  cancel: (id) => api.post(`/orders/${id}/cancel`),
-  approve: (id) => api.post(`/orders/${id}/approve`),
+  // ---------- Admin ----------
+  adminGetAll: (params = {}) => api.get("/orders", { params }),
+  adminApprove: (id) => api.patch(`/orders/${id}/approve`),
+  adminReject: (id) => api.patch(`/orders/${id}/reject`),
+  adminDeliver: (id) => api.patch(`/orders/${id}/deliver`),
+  adminDelete: (id) => api.delete(`/orders/${id}/admin`),
 };
 
 export default orderService;

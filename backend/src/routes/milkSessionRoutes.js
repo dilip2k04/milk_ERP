@@ -11,14 +11,14 @@ const {
   deleteMilkSession
 } = require("../controllers/milkSessionController");
 
-const allowedRoles = ["admin"];
-
-router.use(authFirebase, requireRoles(allowedRoles));
+router.use(authFirebase, requireRoles(["admin"]));
 
 router.post("/", createMilkSession);
 router.get("/", getMilkSessions);
 router.get("/:id", getMilkSessionById);
-router.patch("/:id", updateMilkSession);
 router.delete("/:id", deleteMilkSession);
+router.put("/:id", updateMilkSession);
+router.patch("/:id", updateMilkSession);
+
 
 module.exports = router;

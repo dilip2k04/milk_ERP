@@ -11,14 +11,19 @@ const {
   deletePaymentMethod
 } = require("../controllers/paymentMethodController");
 
-const allowedRoles = ["admin"];
+/**
+ * 🟢 Allow ALL authenticated roles to view payment methods
+ * (needed for ShopKeeper Orders)
+ */
+router.get("/", authFirebase, getPaymentMethods);
+router.get("/:id", authFirebase, getPaymentMethodById);
 
-router.use(authFirebase, requireRoles(allowedRoles));
-
-router.post("/", createPaymentMethod);
-router.get("/", getPaymentMethods);
-router.get("/:id", getPaymentMethodById);
-router.patch("/:id", updatePaymentMethod);
-router.delete("/:id", deletePaymentMethod);
+/**
+ * 🔒 Only Admin can MODIFY payment methods
+ */
+router.post("/", authFirebase, requireRoles(["admin"]), createPaymentMethod);
+router.patch("/:id", authFirebase, requireRoles(["admin"]), updatePaymentMethod);
+router.put("/:id", authFirebase, requireRoles(["admin"]), updatePaymentMethod);
+router.delete("/:id", authFirebase, requireRoles(["admin"]), deletePaymentMethod);
 
 module.exports = router;

@@ -6,6 +6,7 @@ import AdminLayout from "../layouts/AdminLayout";
 import Dashboard from "../pages/admin/Dashboard";
 import Users from "../pages/admin/Users";
 import Products from "../pages/admin/Products";
+import ProductTypes from "../pages/admin/ProductTypes";
 import MilkSessions from "../pages/admin/MilkSessions";
 import UploadCSV from "../pages/admin/UploadCSV";
 import MilkEntries from "../pages/admin/MilkEntries";
@@ -28,6 +29,7 @@ export default function AdminRoutes() {
           <Route path="" element={<Dashboard />} />
           <Route path="users" element={<Users />} />
           <Route path="products" element={<Products />} />
+          <Route path="product-type" element={<ProductTypes />} />
           <Route path="milk-sessions" element={<MilkSessions />} />
           <Route path="upload-csv" element={<UploadCSV />} />
           <Route path="milk-entries" element={<MilkEntries />} />

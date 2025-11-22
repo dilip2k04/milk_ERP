@@ -4,12 +4,23 @@ const Model = require("../models/PaymentMethod");
 
 exports.createPaymentMethod = async (req, res, next) => {
   try {
-    const doc = await Model.create(req.body);
-    res.status(201).json(doc);
+    if (!req.user || !req.user._id) {
+      return res.status(400).json({ message: "Invalid user (createdBy missing)" });
+    }
+
+    const doc = await Model.create({
+      name: req.body.name,
+      isActive: req.body.isActive,
+      createdBy: req.user._id,   // 🔥 FIXED
+    });
+
+    res.status(201).json({ success: true, data: doc });
   } catch (err) {
+    console.error("Payment Method Create Error:", err);
     next(err);
   }
 };
+
 
 exports.getPaymentMethods = async (req, res, next) => {
   try {

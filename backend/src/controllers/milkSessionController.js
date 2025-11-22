@@ -1,51 +1,56 @@
 const Model = require("../models/MilkSession");
 
-// BASIC CRUD - customize as needed
-
-exports.createMilkSession = async (req, res, next) => {
+// CREATE
+exports.createMilkSession = async (req, res) => {
   try {
-    const doc = await Model.create(req.body);
-    res.status(201).json(doc);
+    const { name, isActive } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ message: "Session name is required" });
+    }
+
+    const session = await Model.create({
+      name,
+      isActive: isActive ?? true,
+      createdBy: req.user._id
+    });
+
+    res.status(201).json({ success: true, data: session });
   } catch (err) {
-    next(err);
+    console.error("Create Milk Session Error:", err);
+    res.status(500).json({ message: "Failed to create session" });
   }
 };
 
-exports.getMilkSessions = async (req, res, next) => {
-  try {
-    const docs = await Model.find();
-    res.json(docs);
-  } catch (err) {
-    next(err);
-  }
+// GET ALL
+exports.getMilkSessions = async (req, res) => {
+  const sessions = await Model.find().sort({ createdAt: -1 });
+  res.json({ success: true, data: sessions });
 };
 
-exports.getMilkSessionById = async (req, res, next) => {
-  try {
-    const doc = await Model.findById(req.params.id);
-    if (!doc) return res.status(404).json({ message: "MilkSession not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
+// GET SINGLE
+exports.getMilkSessionById = async (req, res) => {
+  const session = await Model.findById(req.params.id);
+  if (!session) return res.status(404).json({ message: "Session not found" });
+  res.json({ success: true, data: session });
 };
 
-exports.updateMilkSession = async (req, res, next) => {
-  try {
-    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!doc) return res.status(404).json({ message: "MilkSession not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
+// UPDATE
+exports.updateMilkSession = async (req, res) => {
+  const session = await Model.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true }
+  );
+  if (!session) return res.status(404).json({ message: "Session not found" });
+
+  res.json({ success: true, data: session });
 };
 
-exports.deleteMilkSession = async (req, res, next) => {
-  try {
-    const doc = await Model.findByIdAndDelete(req.params.id);
-    if (!doc) return res.status(404).json({ message: "MilkSession not found" });
-    res.json({ message: "MilkSession deleted" });
-  } catch (err) {
-    next(err);
-  }
+// DELETE
+exports.deleteMilkSession = async (req, res) => {
+  const session = await Model.findByIdAndDelete(req.params.id);
+  if (!session) return res.status(404).json({ message: "Session not found" });
+
+  res.json({ success: true, message: "Session deleted successfully" });
 };
