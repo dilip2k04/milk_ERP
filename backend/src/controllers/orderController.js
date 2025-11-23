@@ -1,17 +1,18 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const PaymentMethod = require("../models/PaymentMethod");
-const User = require("../models/User");
 
-// -------------------- SHOPKEEPER: CREATE ORDER --------------------
+// -------------------------------------------------------
+// SHOPKEEPER: CREATE ORDER
+// -------------------------------------------------------
 exports.createOrder = async (req, res, next) => {
   try {
-    const shopKeeperId = req.user.uid_mongo;
+    const shopKeeperId = req.user._id;
 
     let {
       items,
       paymentType,
-      paymentMode,
+      paymentMethodId,
       amountPaid,
       orderDate,
       deliveryDate,
@@ -21,7 +22,10 @@ exports.createOrder = async (req, res, next) => {
       return res.status(400).json({ message: "Order items required" });
     }
 
-    // Fetch product prices & calculate totals
+    if (!paymentMethodId) {
+      return res.status(400).json({ message: "Payment method required" });
+    }
+
     let populatedItems = [];
     let totalAmount = 0;
 
@@ -29,7 +33,7 @@ exports.createOrder = async (req, res, next) => {
       const p = await Product.findById(i.productId);
       if (!p) return res.status(400).json({ message: "Product not found" });
 
-      const totalPrice = Number(p.price || 0) * Number(i.quantity || 0);
+      const totalPrice = p.price * i.quantity;
       totalAmount += totalPrice;
 
       populatedItems.push({
@@ -51,97 +55,113 @@ exports.createOrder = async (req, res, next) => {
       shopKeeperId,
       items: populatedItems,
       paymentType,
-      paymentMode,
+      paymentMethodId,
       totalAmount,
       amountPaid: amountPaid || 0,
       amountDue,
       orderDate,
       deliveryDate,
       createdBy: shopKeeperId,
+      status: "pending"
     });
 
-    res.status(201).json(order);
+    res.status(201).json({ success: true, data: order });
   } catch (err) {
     next(err);
   }
 };
 
+// -------------------------------------------------------
+// SHOPKEEPER: GET MY ORDERS
+// -------------------------------------------------------
+exports.getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ shopKeeperId: req.user._id })
+      .populate("paymentMethodId", "name")
+      .sort({ createdAt: -1 });
 
-// -------------------- SHOPKEEPER: CANCEL BEFORE APPROVAL --------------------
+    return res.json({ success: true, data: orders });
+  } catch (err) {
+    console.error("Get my orders error:", err);
+    res.status(500).json({ message: "Failed to load orders" });
+  }
+};
 
+// -------------------------------------------------------
+// SHOPKEEPER: CANCEL BEFORE APPROVAL
+// -------------------------------------------------------
 exports.shopKeeperCancel = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
 
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // Ensure only the owner can cancel
     if (order.shopKeeperId.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not allowed" });
-    }
-
-    // Can cancel only if pending
-    if (order.status !== "pending") {
-      return res.status(400).json({
-        message: "Cannot cancel orders that are already approved or processed"
-      });
-    }
-
-    order.status = "cancelled";
-    await order.save();
-
-    res.json({ success: true, message: "Order cancelled successfully", data: order });
-
-  } catch (err) {
-    console.error("Cancel Order Error:", err);
-    res.status(500).json({ message: "Failed to cancel order" });
-  }
-};
-
-
-
-// -------------------- SHOPKEEPER: DELETE BEFORE APPROVAL --------------------
-exports.shopKeeperDelete = async (req, res, next) => {
-  try {
-    const shopKeeperId = req.user.uid_mongo;
-    const order = await Order.findById(req.params.id);
-
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    if (order.shopKeeperId.toString() !== shopKeeperId.toString()) {
-      return res.status(403).json({ message: "Not your order" });
     }
 
     if (order.status !== "pending") {
       return res
         .status(400)
-        .json({ message: "Cannot delete order after approval" });
+        .json({ message: "Only pending orders can be cancelled" });
+    }
+
+    order.status = "cancelled";
+    await order.save();
+
+    res.json({ success: true, message: "Order cancelled", data: order });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to cancel order" });
+  }
+};
+
+// -------------------------------------------------------
+// SHOPKEEPER: DELETE BEFORE APPROVAL
+// -------------------------------------------------------
+exports.shopKeeperDelete = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) return res.status(404).json({ message: "Order not found" });
+
+    if (order.shopKeeperId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Not allowed" });
+    }
+
+    if (order.status !== "pending") {
+      return res
+        .status(400)
+        .json({ message: "Cannot delete non-pending orders" });
     }
 
     await order.deleteOne();
-    res.json({ message: "Order deleted" });
+    res.json({ success: true, message: "Order deleted" });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to delete order" });
   }
 };
 
-
-// -------------------- ADMIN: GET ALL ORDERS --------------------
-exports.getOrders = async (req, res, next) => {
+// -------------------------------------------------------
+// ADMIN: GET ALL ORDERS
+// -------------------------------------------------------
+exports.getOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate("shopKeeperId", "name phone");
-    res.json(orders);
+    const orders = await Order.find()
+      .populate("shopKeeperId", "name phone")
+      .populate("paymentMethodId", "name")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: orders });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to load orders" });
   }
 };
 
-
-// -------------------- ADMIN: APPROVE ORDER --------------------
-exports.approveOrder = async (req, res, next) => {
+// -------------------------------------------------------
+// ADMIN: APPROVE ORDER
+// -------------------------------------------------------
+exports.approveOrder = async (req, res) => {
   try {
-    const adminId = req.user.uid_mongo;
-
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
@@ -150,21 +170,20 @@ exports.approveOrder = async (req, res, next) => {
     }
 
     order.status = "confirmed";
-    order.approvedBy = adminId;
+    order.approvedBy = req.user._id;
     await order.save();
 
-    res.json({ message: "Order approved", order });
+    res.json({ success: true, message: "Order approved", order });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to approve order" });
   }
 };
 
-
-// -------------------- ADMIN: REJECT ORDER --------------------
-exports.rejectOrder = async (req, res, next) => {
+// -------------------------------------------------------
+// ADMIN: REJECT ORDER
+// -------------------------------------------------------
+exports.rejectOrder = async (req, res) => {
   try {
-    const adminId = req.user.uid_mongo;
-
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
@@ -173,44 +192,47 @@ exports.rejectOrder = async (req, res, next) => {
     }
 
     order.status = "rejected";
-    order.approvedBy = adminId;
+    order.approvedBy = req.user._id;
     await order.save();
 
-    res.json({ message: "Order rejected", order });
+    res.json({ success: true, message: "Order rejected", order });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to reject order" });
   }
 };
 
-
-// -------------------- ADMIN: MARK AS DELIVERED --------------------
-exports.markDelivered = async (req, res, next) => {
+// -------------------------------------------------------
+// ADMIN: MARK DELIVERED
+// -------------------------------------------------------
+exports.markDelivered = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id);
+
     if (!order) return res.status(404).json({ message: "Order not found" });
 
     if (order.status !== "confirmed") {
       return res
         .status(400)
-        .json({ message: "Order must be confirmed before delivery" });
+        .json({ message: "Order must be confirmed first" });
     }
 
     order.status = "delivered";
     await order.save();
 
-    res.json({ message: "Order delivered", order });
+    res.json({ success: true, message: "Order delivered", order });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to update order" });
   }
 };
 
-
-// -------------------- ADMIN: DELETE ANY ORDER --------------------
-exports.deleteOrder = async (req, res, next) => {
+// -------------------------------------------------------
+// ADMIN: DELETE ORDER
+// -------------------------------------------------------
+exports.deleteOrder = async (req, res) => {
   try {
     await Order.findByIdAndDelete(req.params.id);
-    res.json({ message: "Order deleted by admin" });
+    res.json({ success: true, message: "Order deleted by admin" });
   } catch (err) {
-    next(err);
+    res.status(500).json({ message: "Failed to delete order" });
   }
 };

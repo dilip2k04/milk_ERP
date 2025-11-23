@@ -4,16 +4,16 @@ const authFirebase = require("../middleware/authFirebase");
 const { requireRoles } = require("../middleware/rbac");
 const ctrl = require("../controllers/orderController");
 
+// All order routes require login
 router.use(authFirebase);
 
-// Shop Keeper Create Order
+// SHOPKEEPER FEATURES
+router.get("/my", requireRoles(["shop_keeper"]), ctrl.getMyOrders);
 router.post("/", requireRoles(["shop_keeper"]), ctrl.createOrder);
-
-// Shop Keeper Cancel/ Delete Before Approval
 router.patch("/:id/cancel", requireRoles(["shop_keeper"]), ctrl.shopKeeperCancel);
 router.delete("/:id", requireRoles(["shop_keeper"]), ctrl.shopKeeperDelete);
 
-// Admin Management
+// ADMIN FEATURES
 router.get("/", requireRoles(["admin"]), ctrl.getOrders);
 router.patch("/:id/approve", requireRoles(["admin"]), ctrl.approveOrder);
 router.patch("/:id/reject", requireRoles(["admin"]), ctrl.rejectOrder);

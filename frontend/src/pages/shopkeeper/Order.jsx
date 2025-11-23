@@ -27,7 +27,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Search, Plus, X, Calendar, CreditCard } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Search, Plus, X, Calendar, CreditCard, Edit, Trash2 } from "lucide-react";
 
 import PageContainer from "../../components/common/PageContainer";
 import orderService from "../../services/orderService";
@@ -83,7 +85,7 @@ export default function ShopkeeperOrdersPage() {
       setProducts(productList);
       setPaymentMethods(methodsList.filter((m) => m.isActive));
     } catch (err) {
-      console.error(err);
+      console.error("❌ loadData error:", err);
       errorToast("Failed to load data");
     } finally {
       setLoading(false);
@@ -99,7 +101,7 @@ export default function ShopkeeperOrdersPage() {
   const itemsWithComputed = form.items.map((item) => {
     const product = getProduct(item.productId);
     const unitPrice = product?.price || 0;
-    const currentStock = product?.currentStock ?? product?.stock ?? product?.quantity ?? 0;
+    const currentStock = typeof product?.currentStock === "number" ? product.currentStock : null;
     const quantity = Number(item.quantity) || 0;
     const totalPrice = unitPrice * quantity;
 
@@ -113,23 +115,22 @@ export default function ShopkeeperOrdersPage() {
   });
 
   const totalAmount = itemsWithComputed.reduce((sum, it) => sum + it.totalPrice, 0);
-  const effectiveAmountPaid = form.paymentType === "full" ? totalAmount : 
-    Math.min(totalAmount, Number(form.amountPaid || 0));
+  const effectiveAmountPaid = form.paymentType === "full" ? totalAmount : Math.min(totalAmount, Number(form.amountPaid || 0));
   const amountDue = Math.max(0, totalAmount - effectiveAmountPaid);
 
   const handleFormChange = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleItemChange = (index, field, value) => {
-    setForm(prev => {
+    setForm((prev) => {
       const items = [...prev.items];
       let v = value;
 
       if (field === "quantity") {
         let qty = Number(value) || 0;
         const product = getProduct(items[index].productId);
-        const stock = product?.currentStock ?? product?.stock ?? product?.quantity ?? null;
+        const stock = typeof product?.currentStock === "number" ? product.currentStock : null;
 
         if (stock != null) {
           qty = Math.max(1, Math.min(qty, stock));
@@ -145,11 +146,11 @@ export default function ShopkeeperOrdersPage() {
   };
 
   const addItemRow = () => {
-    setForm(prev => ({ ...prev, items: [...prev.items, emptyItem] }));
+    setForm((prev) => ({ ...prev, items: [...prev.items, emptyItem] }));
   };
 
   const removeItemRow = (index) => {
-    setForm(prev => {
+    setForm((prev) => {
       const items = [...prev.items];
       if (items.length === 1) return prev;
       items.splice(index, 1);
@@ -178,14 +179,14 @@ export default function ShopkeeperOrdersPage() {
       return false;
     }
 
-    const validItems = itemsWithComputed.filter(it => it.productId && it.quantity > 0);
+    const validItems = itemsWithComputed.filter((it) => it.productId && it.quantity > 0);
     if (validItems.length === 0) {
       errorToast("Add at least one product");
       return false;
     }
 
     for (const it of validItems) {
-      if (it.currentStock != null && it.quantity > it.currentStock) {
+      if (typeof it.currentStock === "number" && it.currentStock >= 0 && it.quantity > it.currentStock) {
         errorToast(`"${it.productName}" quantity exceeds available stock`);
         return false;
       }
@@ -210,9 +211,12 @@ export default function ShopkeeperOrdersPage() {
     try {
       setSubmitting(true);
       const payload = {
-        items: itemsWithComputed.map(it => ({
+        items: itemsWithComputed.map((it) => ({
           productId: it.productId,
+          productName: it.productName,
           quantity: it.quantity,
+          unitPrice: it.unitPrice,
+          totalPrice: it.totalPrice,
         })),
         paymentType: form.paymentType,
         paymentMethodId: form.paymentMethodId,
@@ -227,7 +231,7 @@ export default function ShopkeeperOrdersPage() {
       resetForm();
       loadData();
     } catch (err) {
-      console.error(err);
+      console.error("❌ handleCreateOrder error:", err);
       errorToast(err?.response?.data?.message || "Failed to place order");
     } finally {
       setSubmitting(false);
@@ -261,27 +265,28 @@ export default function ShopkeeperOrdersPage() {
   };
 
   const statusBadge = (status) => {
-    const base = "px-2 py-1 rounded-full text-xs font-medium";
+    const base = "px-3 py-1 rounded-full text-xs font-medium border";
     switch (status) {
       case "pending":
-        return <Badge className={`${base} bg-amber-50 text-amber-700 border-amber-200`}>Pending</Badge>;
+        return <Badge variant="outline" className={`${base} border-amber-200 text-amber-700 bg-amber-50`}>Pending</Badge>;
       case "confirmed":
-        return <Badge className={`${base} bg-blue-50 text-blue-700 border-blue-200`}>Confirmed</Badge>;
+        return <Badge variant="outline" className={`${base} border-blue-200 text-blue-700 bg-blue-50`}>Confirmed</Badge>;
       case "delivered":
-        return <Badge className={`${base} bg-emerald-50 text-emerald-700 border-emerald-200`}>Delivered</Badge>;
+        return <Badge variant="outline" className={`${base} border-green-200 text-green-700 bg-green-50`}>Delivered</Badge>;
       case "rejected":
-        return <Badge className={`${base} bg-rose-50 text-rose-700 border-rose-200`}>Rejected</Badge>;
+        return <Badge variant="outline" className={`${base} border-red-200 text-red-700 bg-red-50`}>Rejected</Badge>;
       case "cancelled":
-        return <Badge className={`${base} bg-gray-100 text-gray-700 border-gray-300`}>Cancelled</Badge>;
+        return <Badge variant="outline" className={`${base} border-gray-300 text-gray-600 bg-gray-100`}>Cancelled</Badge>;
       default:
-        return <Badge className={base}>{status}</Badge>;
+        return <Badge variant="outline" className={base}>{status}</Badge>;
     }
   };
 
-  const filteredOrders = orders.filter(order => 
-    order._id.toLowerCase().includes(search.toLowerCase()) ||
-    order.paymentMethodId?.name?.toLowerCase().includes(search.toLowerCase()) ||
-    order.status.toLowerCase().includes(search.toLowerCase())
+  const filteredOrders = orders.filter(
+    (order) =>
+      order._id.toLowerCase().includes(search.toLowerCase()) ||
+      order.paymentMethodId?.name?.toLowerCase().includes(search.toLowerCase()) ||
+      order.status.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -300,8 +305,11 @@ export default function ShopkeeperOrdersPage() {
               />
             </div>
 
-            <Button 
-              onClick={() => { resetForm(); setIsCreateOpen(true); }}
+            <Button
+              onClick={() => {
+                resetForm();
+                setIsCreateOpen(true);
+              }}
               className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -319,7 +327,7 @@ export default function ShopkeeperOrdersPage() {
               <TableRow className="bg-gray-50">
                 <TableHead className="font-semibold">Order ID</TableHead>
                 <TableHead className="font-semibold">Order Date</TableHead>
-                <TableHead className="font-semibold">Delivery</TableHead>
+                <TableHead className="font-semibold">Delivery Date</TableHead>
                 <TableHead className="font-semibold">Payment</TableHead>
                 <TableHead className="font-semibold text-right">Amount</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
@@ -342,10 +350,15 @@ export default function ShopkeeperOrdersPage() {
                     <CreditCard className="h-12 w-12 text-gray-300 mx-auto mb-4" />
                     <p className="text-gray-500">No orders found</p>
                     {search ? (
-                      <p className="text-sm text-gray-500 mt-1">Try adjusting your search</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Try adjusting your search
+                      </p>
                     ) : (
-                      <Button 
-                        onClick={() => { resetForm(); setIsCreateOpen(true); }}
+                      <Button
+                        onClick={() => {
+                          resetForm();
+                          setIsCreateOpen(true);
+                        }}
                         className="mt-4 bg-black hover:bg-gray-800 text-white"
                       >
                         <Plus className="h-4 w-4 mr-2" />
@@ -356,9 +369,9 @@ export default function ShopkeeperOrdersPage() {
                 </TableRow>
               ) : (
                 filteredOrders.map((order) => (
-                  <TableRow key={order._id} className="border-b border-gray-200">
-                    <TableCell className="font-mono text-xs">
-                      #{order._id.slice(-6).toUpperCase()}
+                  <TableRow key={order._id} className="border-b border-gray-200 hover:bg-gray-50">
+                    <TableCell className="font-medium">
+                      <span className="font-mono text-sm">#{order._id.slice(-6).toUpperCase()}</span>
                     </TableCell>
                     <TableCell>
                       {order.orderDate ? new Date(order.orderDate).toLocaleDateString() : "-"}
@@ -366,11 +379,16 @@ export default function ShopkeeperOrdersPage() {
                     <TableCell>
                       {order.deliveryDate ? new Date(order.deliveryDate).toLocaleDateString() : "-"}
                     </TableCell>
-                    <TableCell className="capitalize text-sm">
-                      {order.paymentType} ({order.paymentMethodId?.name || "N/A"})
+                    <TableCell>
+                      <div className="text-sm">
+                        <span className="capitalize">{order.paymentType}</span>
+                        <div className="text-xs text-gray-500">
+                          {order.paymentMethodId?.name || "N/A"}
+                        </div>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="text-sm">₹{order.totalAmount?.toFixed(2) || "0.00"}</div>
+                      <div className="font-semibold">₹{order.totalAmount?.toFixed(2) || "0.00"}</div>
                       <div className="text-xs text-gray-500">
                         Paid: ₹{order.amountPaid?.toFixed(2) || "0.00"}
                       </div>
@@ -394,7 +412,7 @@ export default function ShopkeeperOrdersPage() {
                               onClick={() => handleDeleteOrder(order)}
                               className="border-red-300 text-red-600 hover:bg-red-50"
                             >
-                              <X className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </>
                         )}
@@ -422,10 +440,11 @@ export default function ShopkeeperOrdersPage() {
             {/* Dates */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Order Date</label>
+                <Label htmlFor="order-date" className="text-sm font-medium">Order Date</Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
+                    id="order-date"
                     type="date"
                     value={form.orderDate}
                     onChange={(e) => handleFormChange("orderDate", e.target.value)}
@@ -434,10 +453,11 @@ export default function ShopkeeperOrdersPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Delivery Date</label>
+                <Label htmlFor="delivery-date" className="text-sm font-medium">Delivery Date</Label>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
+                    id="delivery-date"
                     type="date"
                     value={form.deliveryDate}
                     onChange={(e) => handleFormChange("deliveryDate", e.target.value)}
@@ -450,8 +470,13 @@ export default function ShopkeeperOrdersPage() {
             {/* Products Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium">Products</h3>
-                <Button size="sm" variant="outline" onClick={addItemRow} className="border-gray-300">
+                <Label className="text-sm font-medium">Products</Label>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={addItemRow}
+                  className="border-gray-300"
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Item
                 </Button>
@@ -461,10 +486,10 @@ export default function ShopkeeperOrdersPage() {
                 {itemsWithComputed.map((item, index) => (
                   <Card key={index} className="border-gray-200">
                     <CardContent className="p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                         {/* Product Selection */}
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium">Product</label>
+                        <div className="md:col-span-5 space-y-2">
+                          <Label className="text-xs font-medium">Product</Label>
                           <Select
                             value={item.productId}
                             onValueChange={(val) => handleItemChange(index, "productId", val)}
@@ -474,8 +499,8 @@ export default function ShopkeeperOrdersPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {products
-                                .filter(p => p.isActive !== false)
-                                .map(product => (
+                                .filter((p) => p.isActive !== false)
+                                .map((product) => (
                                   <SelectItem key={product._id} value={product._id}>
                                     {product.name} {product.size ? `(${product.size} ${product.unit})` : `(${product.unit})`}
                                   </SelectItem>
@@ -485,8 +510,8 @@ export default function ShopkeeperOrdersPage() {
                         </div>
 
                         {/* Quantity */}
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium">Quantity</label>
+                        <div className="md:col-span-3 space-y-2">
+                          <Label className="text-xs font-medium">Quantity</Label>
                           <Input
                             type="number"
                             min="1"
@@ -499,32 +524,35 @@ export default function ShopkeeperOrdersPage() {
                           </p>
                         </div>
 
-                        {/* Price */}
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium">Unit Price</label>
+                        {/* Price & Total */}
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-xs font-medium">Unit Price</Label>
                           <div className="p-2 text-sm bg-gray-50 rounded border border-gray-200">
                             ₹{item.unitPrice.toFixed(2)}
                           </div>
                         </div>
 
-                        {/* Total & Remove */}
-                        <div className="space-y-2">
-                          <label className="text-xs font-medium">Total</label>
+                        <div className="md:col-span-2 space-y-2">
+                          <Label className="text-xs font-medium">Total</Label>
                           <div className="p-2 text-sm font-semibold bg-gray-50 rounded border border-gray-200">
                             ₹{item.totalPrice.toFixed(2)}
                           </div>
-                          {form.items.length > 1 && (
+                        </div>
+
+                        {/* Remove Button */}
+                        {form.items.length > 1 && (
+                          <div className="md:col-span-12 flex justify-end pt-2">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => removeItemRow(index)}
-                              className="w-full mt-2 border-red-300 text-red-600 hover:bg-red-50"
+                              className="border-red-300 text-red-600 hover:bg-red-50"
                             >
                               <X className="h-4 w-4 mr-1" />
-                              Remove
+                              Remove Item
                             </Button>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -536,10 +564,10 @@ export default function ShopkeeperOrdersPage() {
             <Card className="border-gray-200">
               <CardContent className="p-4">
                 <h3 className="text-sm font-medium mb-4">Payment Details</h3>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-medium">Payment Type</label>
+                    <Label className="text-xs font-medium">Payment Type</Label>
                     <Select
                       value={form.paymentType}
                       onValueChange={(val) => handleFormChange("paymentType", val)}
@@ -555,7 +583,7 @@ export default function ShopkeeperOrdersPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-medium">Payment Method</label>
+                    <Label className="text-xs font-medium">Payment Method</Label>
                     <Select
                       value={form.paymentMethodId}
                       onValueChange={(val) => handleFormChange("paymentMethodId", val)}
@@ -564,7 +592,7 @@ export default function ShopkeeperOrdersPage() {
                         <SelectValue placeholder="Select method" />
                       </SelectTrigger>
                       <SelectContent>
-                        {paymentMethods.map(method => (
+                        {paymentMethods.map((method) => (
                           <SelectItem key={method._id} value={method._id}>
                             {method.name}
                           </SelectItem>
@@ -575,7 +603,7 @@ export default function ShopkeeperOrdersPage() {
 
                   {form.paymentType === "partial" && (
                     <div className="space-y-2">
-                      <label className="text-xs font-medium">Amount Paid (₹)</label>
+                      <Label className="text-xs font-medium">Amount Paid (₹)</Label>
                       <Input
                         type="number"
                         min="0"
@@ -588,18 +616,18 @@ export default function ShopkeeperOrdersPage() {
                 </div>
 
                 {/* Amount Summary */}
-                <div className="flex flex-wrap gap-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <div className="text-sm">
-                    <span className="text-gray-600">Total Amount:</span>
-                    <span className="font-semibold ml-2">₹{totalAmount.toFixed(2)}</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-gray-900">₹{totalAmount.toFixed(2)}</div>
+                    <div className="text-sm text-gray-600">Total Amount</div>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Amount Paid:</span>
-                    <span className="font-semibold ml-2">₹{effectiveAmountPaid.toFixed(2)}</span>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-black-600">₹{effectiveAmountPaid.toFixed(2)}</div>
+                    <div className="text-sm text-gray-600">Amount Paid</div>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-gray-600">Amount Due:</span>
-                    <span className="font-semibold ml-2">₹{amountDue.toFixed(2)}</span>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-black-600">₹{amountDue.toFixed(2)}</div>
+                    <div className="text-sm text-gray-600">Amount Due</div>
                   </div>
                 </div>
               </CardContent>
@@ -607,15 +635,16 @@ export default function ShopkeeperOrdersPage() {
           </div>
 
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsCreateOpen(false)}
               className="border-gray-300 text-black hover:bg-gray-100"
+              disabled={submitting}
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleCreateOrder} 
+            <Button
+              onClick={handleCreateOrder}
               disabled={submitting}
               className="bg-black hover:bg-gray-800 text-white"
             >

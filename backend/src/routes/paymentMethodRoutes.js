@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const authFirebase = require("../middleware/authFirebase");
 const { requireRoles } = require("../middleware/rbac");
 
@@ -8,18 +9,17 @@ const {
   getPaymentMethods,
   getPaymentMethodById,
   updatePaymentMethod,
-  deletePaymentMethod
+  deletePaymentMethod,
 } = require("../controllers/paymentMethodController");
 
 /**
- * 🟢 Allow ALL authenticated roles to view payment methods
- * (needed for ShopKeeper Orders)
+ * 🟢 All authenticated roles can VIEW
  */
 router.get("/", authFirebase, getPaymentMethods);
 router.get("/:id", authFirebase, getPaymentMethodById);
 
 /**
- * 🔒 Only Admin can MODIFY payment methods
+ * 🔒 Only ADMIN can MODIFY
  */
 router.post("/", authFirebase, requireRoles(["admin"]), createPaymentMethod);
 router.patch("/:id", authFirebase, requireRoles(["admin"]), updatePaymentMethod);
