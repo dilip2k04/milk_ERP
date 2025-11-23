@@ -19,6 +19,7 @@ exports.createProduct = asyncHandler(async (req, res) => {
     name,
     unit,
     size: size || "",
+    currentStock: 0,
     price,
     isActive,
     createdBy: req.user._id,
@@ -66,6 +67,7 @@ exports.updateProduct = asyncHandler(async (req, res) => {
   if (name !== undefined) product.name = name;
   if (unit !== undefined) product.unit = unit;
   if (size !== undefined) product.size = size;
+  if (currentStock !== undefined) product.currentStock = currentStock;
   if (price !== undefined) product.price = price;
   if (isActive !== undefined) product.isActive = isActive;
 
