@@ -1,24 +1,18 @@
 // utils/toast.js
-import { toast } from "../hooks/use-toast";
+import { toast } from 'sonner';
 
 export const successToast = (message) => {
-  toast({
-    title: "Success",
-    description: message,
-  });
+  toast.success(message);
 };
 
 export const errorToast = (message) => {
-  toast({
-    title: "Error",
-    variant: "destructive",
-    description: message,
-  });
+  toast.error(message);
 };
 
 export const infoToast = (message) => {
-  toast({
-    title: "Info",
-    description: message,
-  });
+  toast.info(message);
+};
+
+export const warningToast = (message) => {
+  toast.warning(message);
 };
