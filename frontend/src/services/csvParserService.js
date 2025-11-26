@@ -1,6 +1,5 @@
 const csv = require("csv-parser");
 const fs = require("fs");
-const Farmer = require("../models/Farmer");
 const milkRateEngine = require("./milkRateEngine");
 
 const csvParserService = {

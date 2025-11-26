@@ -52,6 +52,7 @@ export default function Products() {
     unit: "packet",
     size: "",
     price: "",
+    currentStock: "0", // Added currentStock to initial form state
     isActive: true,
   });
 
@@ -96,6 +97,7 @@ export default function Products() {
       unit: "packet",
       size: "",
       price: "",
+      currentStock: "0",
       isActive: true,
     });
     setIsCreateOpen(true);
@@ -107,6 +109,7 @@ export default function Products() {
       productTypeId: p.productTypeId?._id || p.productTypeId || "",
       name: p.name || "",
       unit: p.unit || "packet",
+      currentStock: p.currentStock?.toString() || "0",
       size: p.size || "",
       price: p.price?.toString() || "",
       isActive: p.isActive ?? true,
@@ -119,6 +122,7 @@ export default function Products() {
       const payload = {
         ...form,
         price: Number(form.price),
+        currentStock: Number(form.currentStock) || 0,
       };
       await productService.create(payload);
       successToast("Product created");
@@ -135,6 +139,7 @@ export default function Products() {
       const payload = {
         ...form,
         price: Number(form.price),
+        currentStock: Number(form.currentStock) || 0,
       };
       await productService.update(editingProduct._id, payload);
       successToast("Product updated");
@@ -166,6 +171,7 @@ export default function Products() {
         productTypeId: p.productTypeId?._id || p.productTypeId,
         name: p.name,
         unit: p.unit,
+        currentStock: p.currentStock,   
         size: p.size,
         price: p.price,
         isActive: !p.isActive
@@ -246,6 +252,7 @@ export default function Products() {
                 <TableHead className="font-semibold">Type</TableHead>
                 <TableHead className="font-semibold">Unit</TableHead>
                 <TableHead className="font-semibold">Size</TableHead>
+                <TableHead className="font-semibold">Current Stock</TableHead>
                 <TableHead className="font-semibold">Price</TableHead>
                 <TableHead className="font-semibold">Status</TableHead>
                 <TableHead className="font-semibold text-right">Actions</TableHead>
@@ -254,7 +261,7 @@ export default function Products() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     <div className="flex justify-center">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
                     </div>
@@ -263,7 +270,7 @@ export default function Products() {
                 </TableRow>
               ) : filteredProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     <p className="text-gray-500">No products found</p>
                     {search || typeFilter !== "all" ? (
                       <p className="text-sm text-gray-500 mt-1">
@@ -284,6 +291,7 @@ export default function Products() {
                     <TableCell>{p.productTypeId?.name || "-"}</TableCell>
                     <TableCell className="capitalize">{p.unit}</TableCell>
                     <TableCell>{p.size}</TableCell>
+                    <TableCell>{p.currentStock}</TableCell>
                     <TableCell>₹{p.price}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -411,6 +419,18 @@ export default function Products() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="currentStock" className="text-sm font-medium">Current Stock</Label>
+              <Input
+                id="currentStock"
+                placeholder="Current Stock"
+                type="number"
+                value={form.currentStock}
+                onChange={(e) => handleFormChange("currentStock", e.target.value)}
+                className="bg-white border-gray-300"
+              />
+            </div>
+
             <div className="flex items-center gap-3">
               <Switch
                 checked={form.isActive}
@@ -518,6 +538,18 @@ export default function Products() {
                 type="number"
                 value={form.price}
                 onChange={(e) => handleFormChange("price", e.target.value)}
+                className="bg-white border-gray-300"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-currentStock" className="text-sm font-medium">Current Stock</Label>
+              <Input
+                id="edit-currentStock"
+                placeholder="Current Stock"
+                type="number"
+                value={form.currentStock}
+                onChange={(e) => handleFormChange("currentStock", e.target.value)}
                 className="bg-white border-gray-300"
               />
             </div>

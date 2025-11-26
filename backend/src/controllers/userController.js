@@ -24,14 +24,12 @@ exports.createUser = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Create Firebase User
     const fbUser = await admin.auth().createUser({
       email,
       password: "123456",
       displayName: name,
     });
 
-    // Save MongoDB User
     const newUser = await User.create({
       firebaseUid: fbUser.uid,
       name,
@@ -54,14 +52,28 @@ exports.createUser = async (req, res) => {
 };
 
 // -------------------------------------------------------------
-// GET ALL USERS
+// GET USERS (Supports Filtering: ?role=farmer)
 // -------------------------------------------------------------
-exports.getUsers = asyncHandler(async (req, res) => {
-  if (!ensureAdmin(req, res)) return;
+exports.getUsers = async (req, res) => {
+  try {
+    if (!ensureAdmin(req, res)) return;
 
-  const users = await User.find().sort({ createdAt: -1 });
-  res.json({ success: true, data: users });
-});
+    const filter = {};
+
+    if (req.query.role) {
+      filter.role = req.query.role;
+      filter.isActive = true; // Only active farmers
+    }
+
+    const users = await User.find(filter).sort({ createdAt: -1 });
+
+    return res.json({ success: true, data: users });
+
+  } catch (err) {
+    console.error("User load error:", err);
+    return res.status(500).json({ message: "Failed to load users" });
+  }
+};
 
 // -------------------------------------------------------------
 // GET USER BY ID
@@ -86,12 +98,10 @@ exports.updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  // Update Firebase status (enable/disable)
   await admin.auth().updateUser(user.firebaseUid, {
     disabled: !isActive,
   });
 
-  // Update MongoDB
   user.name = name;
   user.phone = phone;
   user.role = role;
@@ -111,10 +121,7 @@ exports.deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ message: "User not found" });
 
-  // Delete Firebase account
   await admin.auth().deleteUser(user.firebaseUid);
-
-  // Delete from MongoDB
   await user.deleteOne();
 
   res.json({ success: true, message: "User deleted successfully" });

@@ -1,6 +1,6 @@
 const csv = require("csv-parser");
 const fs = require("fs");
-const Farmer = require("../models/Farmer");
+const User = require("../models/User");
 const milkRateEngine = require("./milkRateEngine");
 
 const csvParserService = {
@@ -16,30 +16,41 @@ const csvParserService = {
     });
   },
 
-  async processMilkRows(rows, sessionId) {
-    const FarmerModel = Farmer;
-
+  async processMilkRows(rows, sessionId, createdBy) {
     const results = {
       success: [],
-      failed: []
+      failed: [],
     };
 
     const rateConfig = await milkRateEngine.getActiveRateConfig();
 
     for (const row of rows) {
-      const farmerCode = row.farmerCode?.trim();
-      const liters = Number(row.liters || 0);
+      // Handle multiple possible column names for phone
+      const phone = row.phone || row.farmerCode || row.mobile || row.Phone || "";
+      const liters = Number(row.liters || row.ltr || row.quantity || 0);
+      const fat = Number(row.fat || row.Fat || row.FAT || 0);
+      const snf = Number(row.snf || row.Snf || row.SNF || 0);
+      const water = Number(row.water || row.Water || 0);
 
-      const fat = Number(row.fat || 0);
-      const snf = Number(row.snf || 0);
-      const water = Number(row.water || 0);
+      if (!phone) {
+        results.failed.push({
+          row,
+          reason: "Missing phone/farmerCode",
+        });
+        continue;
+      }
 
-      const farmer = await FarmerModel.findOne({ farmerCode });
+      // Find user with role "farmer" by phone
+      const farmer = await User.findOne({
+        phone: phone.trim(),
+        role: "farmer",
+        isActive: true
+      });
 
       if (!farmer) {
         results.failed.push({
           row,
-          reason: "Farmer ID not in system — skipped"
+          reason: `Farmer with phone: ${phone} not found or not active`,
         });
         continue;
       }
@@ -55,7 +66,9 @@ const csvParserService = {
         snf,
         water,
         rate,
-        amount
+        amount,
+        date: new Date(),
+        createdBy: createdBy
       });
     }
 

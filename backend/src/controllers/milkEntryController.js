@@ -1,51 +1,47 @@
-const Model = require("../models/MilkEntry");
+const MilkEntry = require("../models/MilkEntry");
+const User = require("../models/User");
 
-// BASIC CRUD - customize as needed
-
-exports.createMilkEntry = async (req, res, next) => {
+exports.getAllEntries = async (req, res) => {
   try {
-    const doc = await Model.create(req.body);
-    res.status(201).json(doc);
+    const entries = await MilkEntry.find()
+      .populate("farmerId", "name phone")
+      .populate("sessionId", "sessionName date")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: entries });
   } catch (err) {
-    next(err);
+    console.error("Milk entries fetch error:", err);
+    res.status(500).json({ message: "Failed to load milk entries" });
   }
 };
 
-exports.getMilkEntrys = async (req, res, next) => {
+exports.getMyEntries = async (req, res) => {
   try {
-    const docs = await Model.find();
-    res.json(docs);
+    const farmerId = req.user._id;
+
+    const entries = await MilkEntry.find({ farmerId })
+      .populate("sessionId", "sessionName date")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: entries });
   } catch (err) {
-    next(err);
+    console.error("Farmer milk entries error:", err);
+    res.status(500).json({ message: "Failed to load your entries" });
   }
 };
 
-exports.getMilkEntryById = async (req, res, next) => {
-  try {
-    const doc = await Model.findById(req.params.id);
-    if (!doc) return res.status(404).json({ message: "MilkEntry not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
-};
 
-exports.updateMilkEntry = async (req, res, next) => {
+exports.getEntriesByFarmer = async (req, res) => {
   try {
-    const doc = await Model.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!doc) return res.status(404).json({ message: "MilkEntry not found" });
-    res.json(doc);
-  } catch (err) {
-    next(err);
-  }
-};
+    const farmerId = req.params.id;
 
-exports.deleteMilkEntry = async (req, res, next) => {
-  try {
-    const doc = await Model.findByIdAndDelete(req.params.id);
-    if (!doc) return res.status(404).json({ message: "MilkEntry not found" });
-    res.json({ message: "MilkEntry deleted" });
+    const entries = await MilkEntry.find({ farmerId })
+      .populate("sessionId", "sessionName date")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: entries });
   } catch (err) {
-    next(err);
+    console.error("Get entries by farmer error:", err);
+    res.status(500).json({ message: "Failed to load farmer entries" });
   }
 };

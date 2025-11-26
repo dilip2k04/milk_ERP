@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authFirebase = require("../middleware/authFirebase");
+const { requireRoles } = require("../middleware/rbac");
 
 const {
   createUser,
@@ -13,13 +14,13 @@ const {
 router.use(authFirebase);
 
 // CRUD
-router.post("/", createUser);
-router.get("/", getUsers);
-router.get("/:id", getUserById);
+router.post("/", requireRoles(["admin"]), createUser);
+router.get("/", requireRoles(["admin"]), getUsers);
+router.get("/:id", requireRoles(["admin"]), getUserById);
 
-router.put("/:id", updateUser); 
-router.patch("/:id", updateUser);  
+router.put("/:id", requireRoles(["admin"]), updateUser);
+router.patch("/:id", requireRoles(["admin"]), updateUser);
 
-router.delete("/:id", deleteUser);
+router.delete("/:id", requireRoles(["admin"]), deleteUser);
 
 module.exports = router;

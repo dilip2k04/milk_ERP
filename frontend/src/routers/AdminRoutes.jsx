@@ -20,6 +20,8 @@ import Discounts from "../pages/admin/Discounts";
 import Reports from "../pages/admin/Reports";
 import Settings from "../pages/admin/Settings";
 import Profile from "../pages/admin/Profile";
+import FarmersList from "../pages/admin/FarmersList";
+import FarmerMilkEntries from "../pages/admin/FarmerMilkEntries";
 
 export default function AdminRoutes() {
   return (
@@ -33,6 +35,8 @@ export default function AdminRoutes() {
           <Route path="milk-sessions" element={<MilkSessions />} />
           <Route path="upload-csv" element={<UploadCSV />} />
           <Route path="milk-entries" element={<MilkEntries />} />
+          <Route path="farmers" element={<FarmersList />} />
+          <Route path="farmer/:id/entries" element={<FarmerMilkEntries />} />
           <Route path="milk-rates" element={<MilkRates />} />
           <Route path="orders" element={<Orders />} />
           <Route path="shopkeeper-dues" element={<ShopkeeperDues />} />

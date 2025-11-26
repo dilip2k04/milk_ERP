@@ -32,7 +32,8 @@ const MENU = {
     { name: "Milk Sessions", path: "/admin/milk-sessions", icon: Droplets },
     { name: "Upload CSV", path: "/admin/upload-csv", icon: Upload },
     { name: "Milk Entries", path: "/admin/milk-entries", icon: FileText },
-    { name: "Rates", path: "/admin/rates", icon: IndianRupee },
+    { name: "Farmers", path: "/admin/farmers", icon: Users },
+    { name: "Rates", path: "/admin/milk-rates", icon: IndianRupee },
     { name: "Orders", path: "/admin/orders", icon: ShoppingCart },
     { name: "Shopkeeper Dues", path: "/admin/shopkeeper-dues", icon: CreditCard },
     { name: "Farmer Payments", path: "/admin/farmer-payments", icon: Receipt },
@@ -60,7 +61,7 @@ const MENU = {
 
   farmer: [
     { name: "Dashboard", path: "/farmer", icon: LayoutDashboard },
-    { name: "Milk Records", path: "/farmer/milk", icon: Droplets },
+    { name: "Milk Records", path: "/farmer/milk-history", icon: Droplets },
     { name: "Payments", path: "/farmer/payments", icon: CreditCard },
   ],
 };

@@ -50,7 +50,8 @@ exports.getProductById = asyncHandler(async (req, res) => {
 
 // UPDATE Product (Admin Only)
 exports.updateProduct = asyncHandler(async (req, res) => {
-  const { productTypeId, name, unit, size, price, isActive } = req.body;
+  // Add currentStock to the destructuring
+  const { productTypeId, name, unit, size, price, currentStock, isActive } = req.body;
 
   const product = await Product.findById(req.params.id);
   if (!product)

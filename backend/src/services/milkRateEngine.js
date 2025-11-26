@@ -1,37 +1,27 @@
-const RateConfig = require("../models/RateConfig");
+const Rate = require("../models/Rate");
 
-const milkRateEngine = {
+module.exports = {
   async getActiveRateConfig() {
-    return await RateConfig.findOne({ isActive: true }).sort({
-      effectiveFrom: -1
-    });
-  },
+    // Since Rate model doesn't have isActive, just get the latest one
+    let config = await Rate.findOne().sort({ createdAt: -1 });
 
-  calculateRate(entry, rateConfig) {
-    let rate = rateConfig.baseRate;
-
-    // Find matching slab
-    const slab = rateConfig.rateSlabs.find((s) => {
-      return (
-        entry.fat >= s.fatMin &&
-        entry.fat <= s.fatMax &&
-        entry.snf >= s.snfMin &&
-        entry.snf <= s.snfMax &&
-        entry.water >= s.waterMin &&
-        entry.water <= s.waterMax
-      );
-    });
-
-    if (slab) {
-      rate = slab.rate;
+    if (!config) {
+      // Create default rate if none exists
+      config = await Rate.create({
+        currentRate: 3,
+        updatedBy: null // or some default user
+      });
     }
 
-    return rate;
+    return { rate: config.currentRate }; // Return in expected format
+  },
+
+  calculateRate({ fat, snf, water }, rateConfig) {
+    const r = Number(rateConfig.rate || 0);
+    return (Number(fat) + Number(snf)) * r;
   },
 
   calculateAmount(liters, rate) {
-    return liters * rate;
+    return Number(liters) * Number(rate);
   }
 };
-
-module.exports = milkRateEngine;

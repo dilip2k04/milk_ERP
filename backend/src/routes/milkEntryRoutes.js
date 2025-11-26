@@ -2,23 +2,30 @@ const express = require("express");
 const router = express.Router();
 const authFirebase = require("../middleware/authFirebase");
 const { requireRoles } = require("../middleware/rbac");
+const ctrl = require("../controllers/milkEntryController");
 
-const {
-  createMilkEntry,
-  getMilkEntrys,
-  getMilkEntryById,
-  updateMilkEntry,
-  deleteMilkEntry
-} = require("../controllers/milkEntryController");
+// Admin: Get all entries
+router.get(
+  "/",
+  authFirebase,
+  requireRoles(["admin"]),
+  ctrl.getAllEntries
+);
 
-const allowedRoles = ["admin"];
+// Farmer: Get own entries
+router.get(
+  "/my",
+  authFirebase,
+  requireRoles(["farmer"]),
+  ctrl.getMyEntries
+);
 
-router.use(authFirebase, requireRoles(allowedRoles));
+router.get(
+  "/by-farmer/:id",
+  authFirebase,
+  requireRoles(["admin"]),
+  ctrl.getEntriesByFarmer
+);
 
-router.post("/", createMilkEntry);
-router.get("/", getMilkEntrys);
-router.get("/:id", getMilkEntryById);
-router.patch("/:id", updateMilkEntry);
-router.delete("/:id", deleteMilkEntry);
 
 module.exports = router;

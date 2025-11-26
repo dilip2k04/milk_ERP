@@ -1,4 +1,4 @@
-const RateConfig = require("../models/RateConfig");
+const RateConfig = require("../models/Rate");
 
 const milkRateEngine = {
   async getActiveRateConfig() {
