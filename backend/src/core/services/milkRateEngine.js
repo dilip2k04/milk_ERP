@@ -8,7 +8,7 @@ module.exports = {
     if (!config) {
       // Create default rate if none exists
       config = await Rate.create({
-        currentRate: 3,
+        currentRate: 1,
         updatedBy: null // or some default user
       });
     }

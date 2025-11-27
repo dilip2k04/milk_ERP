@@ -1,49 +1,75 @@
 /* styles/overrides.css */
 
 /* ---------------------------------------------
+   COLOR VARIABLES (GLOBAL SUPPORT)
+--------------------------------------------- */
+:root {
+  --color-main: #ffffff;   /* white */
+  --color-second: #000000; /* black */
+}
+
+/* ---------------------------------------------
    Fix shadcn cards paddings and spacing
------------------------------------------------- */
+--------------------------------------------- */
 .card {
   @apply rounded-xl shadow-sm;
+  background-color: var(--color-main);
+  color: var(--color-second);
 }
 
 /* ---------------------------------------------
    Button refinement (shadcn base override)
------------------------------------------------- */
+--------------------------------------------- */
 button {
   @apply rounded-lg font-medium;
+  background-color: var(--color-main);
+  color: var(--color-second);
 }
 
 /* ---------------------------------------------
    DataTable tweaks
------------------------------------------------- */
+--------------------------------------------- */
 .data-table-row:hover {
   @apply bg-muted/40;
+  background-color: rgba(0, 0, 0, 0.04); /* light hover using black */
 }
 
 /* Highlight active menu item */
 .sidebar-item-active {
   @apply bg-primary/10 text-primary font-semibold;
+  background-color: rgba(0, 0, 0, 0.1); /* black tint */
+  color: var(--color-second);
 }
 
 /* ---------------------------------------------
    Layout spacing
------------------------------------------------- */
+--------------------------------------------- */
 .layout-container {
   @apply px-4 py-4 md:px-6 md:py-6;
+  background-color: var(--color-main);
+  color: var(--color-second);
 }
 
 /* ---------------------------------------------
-   Dark mode (optional)
------------------------------------------------- */
+   Dark mode
+--------------------------------------------- */
 .dark body {
   @apply bg-neutral-900 text-neutral-100;
 }
 
 .dark .card {
   @apply bg-neutral-800 border border-neutral-700;
+  background-color: #111; /* deep dark */
+  color: #f1f1f1;
 }
 
 .dark button {
   @apply bg-neutral-800 text-white;
+  background-color: #222;
+  color: #fff;
+}
+
+.dark .layout-container {
+  background-color: #111;
+  color: #f5f5f5;
 }

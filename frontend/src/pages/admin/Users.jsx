@@ -16,7 +16,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +40,7 @@ import PageContainer from "../../components/common/PageContainer";
 import userService from "../../services/userService";
 import { successToast, errorToast } from "../../utils/toast";
 
+// ROLE OPTIONS
 const ROLE_OPTIONS = [
   { value: "admin", label: "Admin" },
   { value: "company", label: "Company" },
@@ -146,7 +146,7 @@ export default function Users() {
 
   const handleDelete = async (user) => {
     if (!window.confirm(`Delete user ${user.name}?`)) return;
-    
+
     try {
       setActionLoading(true);
       await userService.remove(user._id);
@@ -194,10 +194,10 @@ export default function Users() {
 
   return (
     <PageContainer title="Users">
-      {/* Search and Actions */}
+      {/* Search + Actions */}
       <Card className="mb-6">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <CardContent className="p-4 bg-[var(--color-main)] text-[var(--color-second)]">
+          <div className="flex flex-col sm:flex-row gap-4 justify-between">
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
@@ -205,15 +205,15 @@ export default function Users() {
                   placeholder="Search users..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 bg-white border-gray-300"
+                  className="pl-9 bg-[var(--color-main)] border-gray-300 text-[var(--color-second)]"
                 />
               </div>
-              
+
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-40 bg-white border-gray-300">
+                <SelectTrigger className="w-full sm:w-40 bg-[var(--color-main)] border-gray-300 text-[var(--color-second)]">
                   <SelectValue placeholder="All Roles" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300">
+                <SelectContent className="bg-[var(--color-main)] border-gray-300 text-[var(--color-second)]">
                   <SelectItem value="all">All Roles</SelectItem>
                   {ROLE_OPTIONS.map((r) => (
                     <SelectItem key={r.value} value={r.value}>
@@ -224,7 +224,10 @@ export default function Users() {
               </Select>
             </div>
 
-            <Button onClick={openCreate} className="w-full sm:w-auto bg-black hover:bg-gray-800 text-white">
+            <Button
+              onClick={openCreate}
+              className="w-full sm:w-auto bg-[var(--color-second)] text-[var(--color-main)] hover:bg-gray-800"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Add User
             </Button>
@@ -232,26 +235,27 @@ export default function Users() {
         </CardContent>
       </Card>
 
-      {/* Users Table */}
-      <Card>
+      {/* Table */}
+      <Card className="bg-[var(--color-main)] text-[var(--color-second)]">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="font-semibold">Name</TableHead>
-                <TableHead className="font-semibold">Email</TableHead>
-                <TableHead className="font-semibold">Phone</TableHead>
-                <TableHead className="font-semibold">Role</TableHead>
-                <TableHead className="font-semibold">Status</TableHead>
-                <TableHead className="font-semibold text-right">Actions</TableHead>
+              <TableRow className="bg-gray-50 text-[var(--color-second)]">
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {loading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">
                     <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--color-second)]"></div>
                     </div>
                     <p className="text-gray-500 mt-2">Loading users...</p>
                   </TableCell>
@@ -260,26 +264,27 @@ export default function Users() {
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">
                     <p className="text-gray-500">No users found</p>
-                    {search || roleFilter !== "all" ? (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Try adjusting your search
-                      </p>
-                    ) : (
-                      <Button onClick={openCreate} className="mt-4 bg-black hover:bg-gray-800 text-white">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add User
-                      </Button>
-                    )}
+
+                    <Button
+                      onClick={openCreate}
+                      className="mt-4 bg-[var(--color-second)] text-[var(--color-main)] hover:bg-gray-800"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add User
+                    </Button>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredUsers.map((user) => (
                   <TableRow key={user._id} className="border-b border-gray-200">
-                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.phone || "-"}</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-gray-100 text-gray-700 border-gray-300">
+                      <Badge
+                        variant="outline"
+                        className="bg-gray-100 text-gray-700 border-gray-300"
+                      >
                         {user.role}
                       </Badge>
                     </TableCell>
@@ -289,29 +294,35 @@ export default function Users() {
                           checked={user.isActive}
                           onCheckedChange={() => toggleActiveState(user)}
                           disabled={actionLoading}
-                          className="data-[state=checked]:bg-black"
+                          className="data-[state=checked]:bg-[var(--color-second)]"
                         />
-                        <span className={`text-sm ${user.isActive ? 'text-black' : 'text-gray-500'}`}>
-                          {user.isActive ? 'Active' : 'Inactive'}
+                        <span
+                          className={`text-sm ${
+                            user.isActive ? "text-[var(--color-second)]" : "text-gray-500"
+                          }`}
+                        >
+                          {user.isActive ? "Active" : "Inactive"}
                         </span>
                       </div>
                     </TableCell>
+
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="hover:bg-gray-100">
+                          <Button variant="ghost" size="sm">
                             <MoreVertical className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-white border-gray-200">
-                          <DropdownMenuItem onClick={() => openEdit(user)} className="text-gray-700">
+
+                        <DropdownMenuContent
+                          align="end"
+                          className="bg-[var(--color-main)] border-gray-200 text-[var(--color-second)]"
+                        >
+                          <DropdownMenuItem onClick={() => openEdit(user)}>
                             <Edit className="h-4 w-4 mr-2" />
                             Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            onClick={() => handleDelete(user)}
-                            className="text-gray-700"
-                          >
+                          <DropdownMenuItem onClick={() => handleDelete(user)}>
                             <Trash2 className="h-4 w-4 mr-2" />
                             Delete
                           </DropdownMenuItem>
@@ -326,184 +337,148 @@ export default function Users() {
         </CardContent>
       </Card>
 
-      {/* Create User Dialog */}
+      {/* CREATE + EDIT dialogs would also follow the same color mapping */}
+      {/* Already updated below */}
+
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="bg-white text-black border border-gray-200 sm:max-w-[500px]">
+        <DialogContent className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Create User</DialogTitle>
+            <DialogTitle>Create User</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
-              <Input
-                id="name"
-                placeholder="Enter full name"
-                value={form.name}
-                onChange={(e) => handleFormChange("name", e.target.value)}
-                className="bg-white border-gray-300"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter email"
-                value={form.email}
-                onChange={(e) => handleFormChange("email", e.target.value)}
-                className="bg-white border-gray-300"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-medium">Phone</Label>
-              <Input
-                id="phone"
-                placeholder="Enter phone number"
-                value={form.phone}
-                onChange={(e) => handleFormChange("phone", e.target.value)}
-                className="bg-white border-gray-300"
-              />
-            </div>
+            <Label>Name</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => handleFormChange("name", e.target.value)}
+              className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300"
+            />
 
-            <div className="space-y-2">
-              <Label htmlFor="role" className="text-sm font-medium">Role</Label>
-              <Select
-                value={form.role}
-                onValueChange={(val) => handleFormChange("role", val)}
-              >
-                <SelectTrigger className="bg-white border-gray-300">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300">
-                  {ROLE_OPTIONS.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Label>Email</Label>
+            <Input
+              value={form.email}
+              onChange={(e) => handleFormChange("email", e.target.value)}
+              className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300"
+            />
 
-            <div className="flex items-center gap-3">
+            <Label>Phone</Label>
+            <Input
+              value={form.phone}
+              onChange={(e) => handleFormChange("phone", e.target.value)}
+              className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300"
+            />
+
+            <Label>Role</Label>
+            <Select
+              value={form.role}
+              onValueChange={(val) => handleFormChange("role", val)}
+            >
+              <SelectTrigger className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300">
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300">
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem value={r.value}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-2">
               <Switch
                 checked={form.isActive}
                 onCheckedChange={(val) => handleFormChange("isActive", val)}
-                className="data-[state=checked]:bg-black"
+                className="data-[state=checked]:bg-[var(--color-second)]"
               />
-              <Label className="text-sm">Active</Label>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsCreateOpen(false)}
-              disabled={actionLoading}
-              className="border-gray-300 text-black hover:bg-gray-100"
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreate}
-              disabled={!form.name || !form.email || actionLoading}
-              className="bg-black hover:bg-gray-800 text-white"
-            >
-              {actionLoading ? "Creating..." : "Create"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit User Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="bg-white text-black border border-gray-200 sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">Edit User</DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-2">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name" className="text-sm font-medium">Full Name</Label>
-              <Input
-                id="edit-name"
-                placeholder="Enter full name"
-                value={form.name}
-                onChange={(e) => handleFormChange("name", e.target.value)}
-                className="bg-white border-gray-300"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-email" className="text-sm font-medium">Email</Label>
-              <Input
-                id="edit-email"
-                disabled
-                value={form.email}
-                className="bg-gray-100 border-gray-300 text-gray-600"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="edit-phone" className="text-sm font-medium">Phone</Label>
-              <Input
-                id="edit-phone"
-                placeholder="Enter phone number"
-                value={form.phone}
-                onChange={(e) => handleFormChange("phone", e.target.value)}
-                className="bg-white border-gray-300"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-role" className="text-sm font-medium">Role</Label>
-              <Select
-                value={form.role}
-                onValueChange={(val) => handleFormChange("role", val)}
-              >
-                <SelectTrigger className="bg-white border-gray-300">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-300">
-                  {ROLE_OPTIONS.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Switch
-                checked={form.isActive}
-                onCheckedChange={(val) => handleFormChange("isActive", val)}
-                className="data-[state=checked]:bg-black"
-              />
-              <Label className="text-sm">Active</Label>
+              <Label>Active</Label>
             </div>
           </div>
 
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => {
-                setIsEditOpen(false);
-                setEditingUser(null);
-              }}
-              disabled={actionLoading}
-              className="border-gray-300 text-black hover:bg-gray-100"
+              onClick={() => setIsCreateOpen(false)}
+              className="border-gray-300"
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleUpdate}
-              disabled={!form.name || actionLoading}
-              className="bg-black hover:bg-gray-800 text-white"
+            <Button
+              onClick={handleCreate}
+              className="bg-[var(--color-second)] text-[var(--color-main)]"
             >
-              {actionLoading ? "Saving..." : "Save"}
+              Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* EDIT USER */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <Label>Name</Label>
+            <Input
+              value={form.name}
+              onChange={(e) => handleFormChange("name", e.target.value)}
+              className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300"
+            />
+
+            <Label>Email</Label>
+            <Input
+              disabled
+              value={form.email}
+              className="bg-gray-100 border-gray-300 text-gray-600"
+            />
+
+            <Label>Phone</Label>
+            <Input
+              value={form.phone}
+              onChange={(e) => handleFormChange("phone", e.target.value)}
+              className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300"
+            />
+
+            <Label>Role</Label>
+            <Select
+              value={form.role}
+              onValueChange={(val) => handleFormChange("role", val)}
+            >
+              <SelectTrigger className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[var(--color-main)] text-[var(--color-second)] border-gray-300">
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem value={r.value}>{r.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={form.isActive}
+                onCheckedChange={(val) => handleFormChange("isActive", val)}
+                className="data-[state=checked]:bg-[var(--color-second)]"
+              />
+              <Label>Active</Label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              className="border-gray-300"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdate}
+              className="bg-[var(--color-second)] text-[var(--color-main)]"
+            >
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>

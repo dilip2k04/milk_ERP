@@ -5,9 +5,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom global styles */
+/* ---------------------------------------
+   🎨 GLOBAL COLOR VARIABLES 
+---------------------------------------- */
+:root {
+  --color-main: #ffffff;   /* white */
+  --color-second: #000000; /* black */
+}
+
+/* Apply global background + text */
 html, body {
   @apply bg-muted/30 text-gray-900 antialiased;
+  background-color: var(--color-main);
+  color: var(--color-second);
 }
 
 /* Smooth transitions everywhere */
@@ -21,7 +31,8 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-md;
+  background-color: var(--color-second);
+  border-radius: 4px;
 }
 
 /* Default container padding */
