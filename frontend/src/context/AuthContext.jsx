@@ -1,58 +1,67 @@
 // context/AuthContext.jsx
-import { createContext, useContext, useEffect, useState } from "react";
-import { onAuthStateChanged, getIdToken, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  getIdToken,
+} from "firebase/auth";
 import { auth } from "../utils/firebase";
 import authService from "../services/authService";
 
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [firebaseUser, setFirebaseUser] = useState(null);
-  const [token, setToken] = useState("");
-  const [user, setUser] = useState(null);   // <-- backend user: role, name, etc.
-  const [role, setRole] = useState("");     // <-- admin | company | shop_keeper | farmer
+  const [firebaseUser, setFirebaseUser] = useState(null); // direct firebase user
+  const [token, setToken] = useState("");                 // firebase token
+  const [user, setUser] = useState(null);                 // backend DB user
+  const [role, setRole] = useState("");                   // role from backend
   const [loading, setLoading] = useState(true);
 
   // ------------------------------
-  // LOGIN FUNCTION
+  // LOGIN
   // ------------------------------
   const login = async (email, password) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    return signInWithEmailAndPassword(auth, email, password);
   };
 
   // ------------------------------
-  // LOGOUT FUNCTION
+  // LOGOUT
   // ------------------------------
   const logout = async () => {
     await signOut(auth);
     setFirebaseUser(null);
     setUser(null);
-    setRole("");
     setToken("");
+    setRole("");
   };
 
   // ------------------------------
-  // FIREBASE LISTENER
+  // FIREBASE AUTH STATE LISTENER
   // ------------------------------
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setFirebaseUser(firebaseUser);
+    const unsub = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
 
-      if (firebaseUser) {
-        const idToken = await getIdToken(firebaseUser);
-
+      if (fbUser) {
+        // Get Firebase token
+        const idToken = await getIdToken(fbUser);
         setToken(idToken);
 
-        // Fetch backend user (/auth/me)
+        // Load backend user
         try {
-          const res = await authService.getMe();
-          const backendUser = res.data?.data;
+          const response = await authService.getMe();
+          const backendUser = response.data?.data;
 
           setUser(backendUser || null);
           setRole(backendUser?.role || "");
-
         } catch (err) {
-          console.error("Failed to load backend user:", err);
+          console.error("❌ Failed to load backend user:", err);
           setUser(null);
           setRole("");
         }
@@ -84,7 +93,6 @@ export function AuthProvider({ children }) {
   );
 }
 
-// EXPORT useAuth HOOK
 export function useAuth() {
   return useContext(AuthContext);
 }

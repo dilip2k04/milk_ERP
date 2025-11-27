@@ -1,0 +1,48 @@
+// src/api/routes/index.js
+const express = require("express");
+const router = express.Router();
+
+console.log("🔥 Loaded: routes/index.js");
+
+const authRoutes = require("./authRoutes");
+const userRoutes = require("./userRoutes");
+const farmerRoutes = require("./farmerRoutes");
+const productTypeRoutes = require("./productTypeRoutes");
+const productRoutes = require("./productRoutes");
+const productStockRoutes = require("./productStockRoutes");
+const milkSessionRoutes = require("./milkSessionRoutes");
+const milkEntryRoutes = require("./milkEntryRoutes");
+const milkUsageRoutes = require("./milkUsageRoutes");
+const customerRoutes = require("./customerRoutes");
+const orderRoutes = require("./orderRoutes");
+const paymentRoutes = require("./paymentRoutes");
+const paymentMethodRoutes = require("./paymentMethodRoutes");
+const rateRoutes = require("./rateRoutes");
+const discountConfigRoutes = require("./discountConfigRoutes");
+const dashboardRoutes = require("./dashboardRoutes");
+const reportRoutes = require("./reportRoutes");
+const csvRoutes = require("./csvRoutes");
+
+console.log("➡️ Registering /auth routes...");
+router.use("/auth", authRoutes);
+
+router.use("/users", userRoutes);
+router.use("/farmers", farmerRoutes);
+router.use("/product-types", productTypeRoutes);
+router.use("/products", productRoutes);
+router.use("/product-stocks", productStockRoutes);
+router.use("/milk-sessions", milkSessionRoutes);
+router.use("/milk-entries", milkEntryRoutes);
+router.use("/milk-usage", milkUsageRoutes);
+router.use("/customers", customerRoutes);
+router.use("/orders", orderRoutes);
+router.use("/payments", paymentRoutes);
+router.use("/payment-methods", paymentMethodRoutes);
+router.use("/rate", rateRoutes);
+router.use("/discounts", discountConfigRoutes);
+router.use("/dashboard", dashboardRoutes);
+router.use("/reports", reportRoutes);
+router.use("/milk", csvRoutes);
+router.use("/csv", csvRoutes);
+
+module.exports = router;
