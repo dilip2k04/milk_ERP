@@ -3,6 +3,12 @@ const router = express.Router();
 
 const authFirebase = require("../../core/middleware/authFirebase");
 const { requireRoles } = require("../../core/middleware/rbac");
+const validate = require("../../core/middleware/validate");
+
+const {
+  createProductSchema,
+  updateProductSchema
+} = require("../validators/productValidator");
 
 const {
   createProduct,
@@ -12,13 +18,13 @@ const {
   deleteProduct,
 } = require("../controllers/productController");
 
-// READ: Allow all authenticated users
+// Anyone authenticated can read
 router.get("/", authFirebase, getProducts);
 router.get("/:id", authFirebase, getProductById);
 
-// WRITE: Admin only
-router.post("/", authFirebase, requireRoles(["admin"]), createProduct);
-router.put("/:id", authFirebase, requireRoles(["admin"]), updateProduct);
+// Admin can modify
+router.post("/", authFirebase, requireRoles(["admin"]), validate(createProductSchema), createProduct);
+router.put("/:id", authFirebase, requireRoles(["admin"]), validate(updateProductSchema), updateProduct);
 router.delete("/:id", authFirebase, requireRoles(["admin"]), deleteProduct);
 
 module.exports = router;

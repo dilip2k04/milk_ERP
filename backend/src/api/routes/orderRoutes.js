@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const authFirebase = require("../../core/middleware/authFirebase");
 const { requireRoles } = require("../../core/middleware/rbac");
+const validate = require("../../core/middleware/validate");
+const { createOrderSchema } = require("../validators/orderValidator");
+
 const ctrl = require("../controllers/orderController");
 
 // All order routes require login
@@ -9,7 +12,7 @@ router.use(authFirebase);
 
 // SHOPKEEPER FEATURES
 router.get("/my", requireRoles(["shop_keeper"]), ctrl.getMyOrders);
-router.post("/", requireRoles(["shop_keeper"]), ctrl.createOrder);
+router.post("/", requireRoles(["shop_keeper"]), validate(createOrderSchema), ctrl.createOrder);
 router.patch("/:id/cancel", requireRoles(["shop_keeper"]), ctrl.shopKeeperCancel);
 router.delete("/:id", requireRoles(["shop_keeper"]), ctrl.shopKeeperDelete);
 

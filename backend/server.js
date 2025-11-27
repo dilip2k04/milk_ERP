@@ -8,8 +8,17 @@ const PORT = process.env.PORT || 5000;
 async function start() {
   try {
     await connectDB();
-    const server = http.createServer(app);
-    server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    
+    // ONLY start server if not running in test mode
+    if (process.env.NODE_ENV !== "test") {
+      const server = http.createServer(app);
+      server.listen(PORT, () =>
+        console.log(`Server running on port ${PORT}`)
+      );
+    }
+
+    return app;
+
   } catch (err) {
     console.error("Failed to start server:", err);
     process.exit(1);
@@ -17,3 +26,5 @@ async function start() {
 }
 
 start();
+
+module.exports = start;

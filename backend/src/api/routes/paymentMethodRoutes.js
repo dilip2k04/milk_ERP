@@ -3,6 +3,12 @@ const router = express.Router();
 
 const authFirebase = require("../../core/middleware/authFirebase");
 const { requireRoles } = require("../../core/middleware/rbac");
+const validate = require("../../core/middleware/validate");
+
+const {
+  createPaymentMethodSchema,
+  updatePaymentMethodSchema
+} = require("../validators/paymentMethodValidator");
 
 const {
   createPaymentMethod,
@@ -12,18 +18,14 @@ const {
   deletePaymentMethod,
 } = require("../controllers/paymentMethodController");
 
-/**
- * 🟢 All authenticated roles can VIEW
- */
+// Read: all authenticated
 router.get("/", authFirebase, getPaymentMethods);
 router.get("/:id", authFirebase, getPaymentMethodById);
 
-/**
- * 🔒 Only ADMIN can MODIFY
- */
-router.post("/", authFirebase, requireRoles(["admin"]), createPaymentMethod);
-router.patch("/:id", authFirebase, requireRoles(["admin"]), updatePaymentMethod);
-router.put("/:id", authFirebase, requireRoles(["admin"]), updatePaymentMethod);
+// Admin modify
+router.post("/", authFirebase, requireRoles(["admin"]), validate(createPaymentMethodSchema), createPaymentMethod);
+router.patch("/:id", authFirebase, requireRoles(["admin"]), validate(updatePaymentMethodSchema), updatePaymentMethod);
+router.put("/:id", authFirebase, requireRoles(["admin"]), validate(updatePaymentMethodSchema), updatePaymentMethod);
 router.delete("/:id", authFirebase, requireRoles(["admin"]), deletePaymentMethod);
 
 module.exports = router;

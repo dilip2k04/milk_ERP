@@ -1,7 +1,14 @@
 const express = require("express");
 const router = express.Router();
+
 const authFirebase = require("../../core/middleware/authFirebase");
 const { requireRoles } = require("../../core/middleware/rbac");
+const validate = require("../../core/middleware/validate");
+
+const {
+  createPaymentSchema,
+  updatePaymentSchema
+} = require("../validators/paymentValidator");
 
 const {
   createPayment,
@@ -11,14 +18,12 @@ const {
   deletePayment
 } = require("../controllers/paymentController");
 
-const allowedRoles = ["admin"];
+router.use(authFirebase, requireRoles(["admin"]));
 
-router.use(authFirebase, requireRoles(allowedRoles));
-
-router.post("/", createPayment);
+router.post("/", validate(createPaymentSchema), createPayment);
 router.get("/", getPayments);
 router.get("/:id", getPaymentById);
-router.patch("/:id", updatePayment);
+router.patch("/:id", validate(updatePaymentSchema), updatePayment);
 router.delete("/:id", deletePayment);
 
 module.exports = router;
