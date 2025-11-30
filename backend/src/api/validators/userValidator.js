@@ -2,11 +2,6 @@ const Joi = require("joi");
 const { ROLES } = require("../../config/appConfig");
 
 exports.createUserSchema = Joi.object({
-  firebaseUid: Joi.string().required().trim().min(1).max(128)
-    .messages({
-      'string.empty': 'Firebase UID is required',
-      'any.required': 'Firebase UID is required'
-    }),
   name: Joi.string().required().trim().min(1).max(100)
     .messages({
       'string.empty': 'Name is required',
